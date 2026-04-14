@@ -1,6 +1,11 @@
 package com.payangar.collegeofwinterhold.registry;
 
 import com.payangar.collegeofwinterhold.CollegeOfWinterhold;
+import com.payangar.collegeofwinterhold.entity.wizard.ender.EnderAdeptEntity;
+import com.payangar.collegeofwinterhold.entity.wizard.ender.EnderApprenticeEntity;
+import com.payangar.collegeofwinterhold.entity.wizard.ender.EnderExpertEntity;
+import com.payangar.collegeofwinterhold.entity.wizard.ender.EnderMasterEntity;
+import com.payangar.collegeofwinterhold.entity.wizard.ender.EnderNoviceEntity;
 import com.payangar.collegeofwinterhold.entity.wizard.fire.FireAdeptEntity;
 import com.payangar.collegeofwinterhold.entity.wizard.fire.FireApprenticeEntity;
 import com.payangar.collegeofwinterhold.entity.wizard.fire.FireExpertEntity;
@@ -16,6 +21,11 @@ import com.payangar.collegeofwinterhold.entity.wizard.lightning.LightningApprent
 import com.payangar.collegeofwinterhold.entity.wizard.lightning.LightningExpertEntity;
 import com.payangar.collegeofwinterhold.entity.wizard.lightning.LightningMasterEntity;
 import com.payangar.collegeofwinterhold.entity.wizard.lightning.LightningNoviceEntity;
+import com.payangar.collegeofwinterhold.entity.wizard.nature.NatureAdeptEntity;
+import com.payangar.collegeofwinterhold.entity.wizard.nature.NatureApprenticeEntity;
+import com.payangar.collegeofwinterhold.entity.wizard.nature.NatureExpertEntity;
+import com.payangar.collegeofwinterhold.entity.wizard.nature.NatureMasterEntity;
+import com.payangar.collegeofwinterhold.entity.wizard.nature.NatureNoviceEntity;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
@@ -132,6 +142,76 @@ public final class ModEntityTypes {
                     .sized(0.6f, 1.8f)
                     .clientTrackingRange(64)
                     .build(ResourceLocation.fromNamespaceAndPath(CollegeOfWinterhold.MODID, "ice_master").toString()));
+
+    public static final DeferredHolder<EntityType<?>, EntityType<EnderNoviceEntity>> ENDER_NOVICE =
+            ENTITIES.register("ender_novice", () -> EntityType.Builder
+                    .of(EnderNoviceEntity::new, MobCategory.MONSTER)
+                    .sized(0.6f, 1.8f)
+                    .clientTrackingRange(64)
+                    .build(ResourceLocation.fromNamespaceAndPath(CollegeOfWinterhold.MODID, "ender_novice").toString()));
+
+    public static final DeferredHolder<EntityType<?>, EntityType<EnderApprenticeEntity>> ENDER_APPRENTICE =
+            ENTITIES.register("ender_apprentice", () -> EntityType.Builder
+                    .of(EnderApprenticeEntity::new, MobCategory.MONSTER)
+                    .sized(0.6f, 1.8f)
+                    .clientTrackingRange(64)
+                    .build(ResourceLocation.fromNamespaceAndPath(CollegeOfWinterhold.MODID, "ender_apprentice").toString()));
+
+    public static final DeferredHolder<EntityType<?>, EntityType<EnderAdeptEntity>> ENDER_ADEPT =
+            ENTITIES.register("ender_adept", () -> EntityType.Builder
+                    .of(EnderAdeptEntity::new, MobCategory.MONSTER)
+                    .sized(0.6f, 1.8f)
+                    .clientTrackingRange(64)
+                    .build(ResourceLocation.fromNamespaceAndPath(CollegeOfWinterhold.MODID, "ender_adept").toString()));
+
+    public static final DeferredHolder<EntityType<?>, EntityType<EnderExpertEntity>> ENDER_EXPERT =
+            ENTITIES.register("ender_expert", () -> EntityType.Builder
+                    .of(EnderExpertEntity::new, MobCategory.MONSTER)
+                    .sized(0.6f, 1.8f)
+                    .clientTrackingRange(64)
+                    .build(ResourceLocation.fromNamespaceAndPath(CollegeOfWinterhold.MODID, "ender_expert").toString()));
+
+    public static final DeferredHolder<EntityType<?>, EntityType<EnderMasterEntity>> ENDER_MASTER =
+            ENTITIES.register("ender_master", () -> EntityType.Builder
+                    .of(EnderMasterEntity::new, MobCategory.MONSTER)
+                    .sized(0.6f, 1.8f)
+                    .clientTrackingRange(64)
+                    .build(ResourceLocation.fromNamespaceAndPath(CollegeOfWinterhold.MODID, "ender_master").toString()));
+
+    public static final DeferredHolder<EntityType<?>, EntityType<NatureNoviceEntity>> NATURE_NOVICE =
+            ENTITIES.register("nature_novice", () -> EntityType.Builder
+                    .of(NatureNoviceEntity::new, MobCategory.MONSTER)
+                    .sized(0.6f, 1.8f)
+                    .clientTrackingRange(64)
+                    .build(ResourceLocation.fromNamespaceAndPath(CollegeOfWinterhold.MODID, "nature_novice").toString()));
+
+    public static final DeferredHolder<EntityType<?>, EntityType<NatureApprenticeEntity>> NATURE_APPRENTICE =
+            ENTITIES.register("nature_apprentice", () -> EntityType.Builder
+                    .of(NatureApprenticeEntity::new, MobCategory.MONSTER)
+                    .sized(0.6f, 1.8f)
+                    .clientTrackingRange(64)
+                    .build(ResourceLocation.fromNamespaceAndPath(CollegeOfWinterhold.MODID, "nature_apprentice").toString()));
+
+    public static final DeferredHolder<EntityType<?>, EntityType<NatureAdeptEntity>> NATURE_ADEPT =
+            ENTITIES.register("nature_adept", () -> EntityType.Builder
+                    .of(NatureAdeptEntity::new, MobCategory.MONSTER)
+                    .sized(0.6f, 1.8f)
+                    .clientTrackingRange(64)
+                    .build(ResourceLocation.fromNamespaceAndPath(CollegeOfWinterhold.MODID, "nature_adept").toString()));
+
+    public static final DeferredHolder<EntityType<?>, EntityType<NatureExpertEntity>> NATURE_EXPERT =
+            ENTITIES.register("nature_expert", () -> EntityType.Builder
+                    .of(NatureExpertEntity::new, MobCategory.MONSTER)
+                    .sized(0.6f, 1.8f)
+                    .clientTrackingRange(64)
+                    .build(ResourceLocation.fromNamespaceAndPath(CollegeOfWinterhold.MODID, "nature_expert").toString()));
+
+    public static final DeferredHolder<EntityType<?>, EntityType<NatureMasterEntity>> NATURE_MASTER =
+            ENTITIES.register("nature_master", () -> EntityType.Builder
+                    .of(NatureMasterEntity::new, MobCategory.MONSTER)
+                    .sized(0.6f, 1.8f)
+                    .clientTrackingRange(64)
+                    .build(ResourceLocation.fromNamespaceAndPath(CollegeOfWinterhold.MODID, "nature_master").toString()));
 
     public static void register(IEventBus bus) {
         ENTITIES.register(bus);

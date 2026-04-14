@@ -32,7 +32,23 @@ public enum CollegeSchool {
                     ItemRegistry.ELECTROMANCER_HELMET,
                     ItemRegistry.ELECTROMANCER_CHESTPLATE,
                     ItemRegistry.ELECTROMANCER_LEGGINGS,
-                    ItemRegistry.ELECTROMANCER_BOOTS));
+                    ItemRegistry.ELECTROMANCER_BOOTS)),
+    ENDER(
+            SchoolRegistry.ENDER,
+            SchoolTendency.ENDER,
+            new SchoolArmorSet(
+                    ItemRegistry.SHADOWWALKER_HELMET,
+                    ItemRegistry.SHADOWWALKER_CHESTPLATE,
+                    ItemRegistry.SHADOWWALKER_LEGGINGS,
+                    ItemRegistry.SHADOWWALKER_BOOTS)),
+    NATURE(
+            SchoolRegistry.NATURE,
+            SchoolTendency.NATURE,
+            new SchoolArmorSet(
+                    ItemRegistry.PLAGUED_HELMET,
+                    ItemRegistry.PLAGUED_CHESTPLATE,
+                    ItemRegistry.PLAGUED_LEGGINGS,
+                    ItemRegistry.PLAGUED_BOOTS));
 
     private final Supplier<SchoolType> ironsSchool;
     private final SchoolTendency tendency;

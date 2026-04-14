@@ -1,6 +1,11 @@
 package com.payangar.collegeofwinterhold.event;
 
 import com.payangar.collegeofwinterhold.CollegeOfWinterhold;
+import com.payangar.collegeofwinterhold.entity.wizard.ender.EnderAdeptEntity;
+import com.payangar.collegeofwinterhold.entity.wizard.ender.EnderApprenticeEntity;
+import com.payangar.collegeofwinterhold.entity.wizard.ender.EnderExpertEntity;
+import com.payangar.collegeofwinterhold.entity.wizard.ender.EnderMasterEntity;
+import com.payangar.collegeofwinterhold.entity.wizard.ender.EnderNoviceEntity;
 import com.payangar.collegeofwinterhold.entity.wizard.fire.FireAdeptEntity;
 import com.payangar.collegeofwinterhold.entity.wizard.fire.FireApprenticeEntity;
 import com.payangar.collegeofwinterhold.entity.wizard.fire.FireExpertEntity;
@@ -16,6 +21,11 @@ import com.payangar.collegeofwinterhold.entity.wizard.lightning.LightningApprent
 import com.payangar.collegeofwinterhold.entity.wizard.lightning.LightningExpertEntity;
 import com.payangar.collegeofwinterhold.entity.wizard.lightning.LightningMasterEntity;
 import com.payangar.collegeofwinterhold.entity.wizard.lightning.LightningNoviceEntity;
+import com.payangar.collegeofwinterhold.entity.wizard.nature.NatureAdeptEntity;
+import com.payangar.collegeofwinterhold.entity.wizard.nature.NatureApprenticeEntity;
+import com.payangar.collegeofwinterhold.entity.wizard.nature.NatureExpertEntity;
+import com.payangar.collegeofwinterhold.entity.wizard.nature.NatureMasterEntity;
+import com.payangar.collegeofwinterhold.entity.wizard.nature.NatureNoviceEntity;
 import com.payangar.collegeofwinterhold.registry.ModEntityTypes;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -41,6 +51,16 @@ public final class ModBusEvents {
         event.put(ModEntityTypes.ICE_ADEPT.get(), IceAdeptEntity.prepareAttributes().build());
         event.put(ModEntityTypes.ICE_EXPERT.get(), IceExpertEntity.prepareAttributes().build());
         event.put(ModEntityTypes.ICE_MASTER.get(), IceMasterEntity.prepareAttributes().build());
+        event.put(ModEntityTypes.ENDER_NOVICE.get(), EnderNoviceEntity.prepareAttributes().build());
+        event.put(ModEntityTypes.ENDER_APPRENTICE.get(), EnderApprenticeEntity.prepareAttributes().build());
+        event.put(ModEntityTypes.ENDER_ADEPT.get(), EnderAdeptEntity.prepareAttributes().build());
+        event.put(ModEntityTypes.ENDER_EXPERT.get(), EnderExpertEntity.prepareAttributes().build());
+        event.put(ModEntityTypes.ENDER_MASTER.get(), EnderMasterEntity.prepareAttributes().build());
+        event.put(ModEntityTypes.NATURE_NOVICE.get(), NatureNoviceEntity.prepareAttributes().build());
+        event.put(ModEntityTypes.NATURE_APPRENTICE.get(), NatureApprenticeEntity.prepareAttributes().build());
+        event.put(ModEntityTypes.NATURE_ADEPT.get(), NatureAdeptEntity.prepareAttributes().build());
+        event.put(ModEntityTypes.NATURE_EXPERT.get(), NatureExpertEntity.prepareAttributes().build());
+        event.put(ModEntityTypes.NATURE_MASTER.get(), NatureMasterEntity.prepareAttributes().build());
     }
 
     private ModBusEvents() {}

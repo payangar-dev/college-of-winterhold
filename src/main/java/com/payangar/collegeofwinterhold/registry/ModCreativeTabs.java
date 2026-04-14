@@ -33,6 +33,16 @@ public final class ModCreativeTabs {
                         output.accept(ModItems.ICE_ADEPT_SPAWN_EGG.get());
                         output.accept(ModItems.ICE_EXPERT_SPAWN_EGG.get());
                         output.accept(ModItems.ICE_MASTER_SPAWN_EGG.get());
+                        output.accept(ModItems.ENDER_NOVICE_SPAWN_EGG.get());
+                        output.accept(ModItems.ENDER_APPRENTICE_SPAWN_EGG.get());
+                        output.accept(ModItems.ENDER_ADEPT_SPAWN_EGG.get());
+                        output.accept(ModItems.ENDER_EXPERT_SPAWN_EGG.get());
+                        output.accept(ModItems.ENDER_MASTER_SPAWN_EGG.get());
+                        output.accept(ModItems.NATURE_NOVICE_SPAWN_EGG.get());
+                        output.accept(ModItems.NATURE_APPRENTICE_SPAWN_EGG.get());
+                        output.accept(ModItems.NATURE_ADEPT_SPAWN_EGG.get());
+                        output.accept(ModItems.NATURE_EXPERT_SPAWN_EGG.get());
+                        output.accept(ModItems.NATURE_MASTER_SPAWN_EGG.get());
                     })
                     .build());
 

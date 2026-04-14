@@ -1,6 +1,11 @@
 package com.payangar.collegeofwinterhold.event;
 
 import com.payangar.collegeofwinterhold.CollegeOfWinterhold;
+import com.payangar.collegeofwinterhold.client.entity.wizard.ender.EnderAdeptRenderer;
+import com.payangar.collegeofwinterhold.client.entity.wizard.ender.EnderApprenticeRenderer;
+import com.payangar.collegeofwinterhold.client.entity.wizard.ender.EnderExpertRenderer;
+import com.payangar.collegeofwinterhold.client.entity.wizard.ender.EnderMasterRenderer;
+import com.payangar.collegeofwinterhold.client.entity.wizard.ender.EnderNoviceRenderer;
 import com.payangar.collegeofwinterhold.client.entity.wizard.fire.FireAdeptRenderer;
 import com.payangar.collegeofwinterhold.client.entity.wizard.fire.FireApprenticeRenderer;
 import com.payangar.collegeofwinterhold.client.entity.wizard.fire.FireExpertRenderer;
@@ -16,6 +21,11 @@ import com.payangar.collegeofwinterhold.client.entity.wizard.lightning.Lightning
 import com.payangar.collegeofwinterhold.client.entity.wizard.lightning.LightningExpertRenderer;
 import com.payangar.collegeofwinterhold.client.entity.wizard.lightning.LightningMasterRenderer;
 import com.payangar.collegeofwinterhold.client.entity.wizard.lightning.LightningNoviceRenderer;
+import com.payangar.collegeofwinterhold.client.entity.wizard.nature.NatureAdeptRenderer;
+import com.payangar.collegeofwinterhold.client.entity.wizard.nature.NatureApprenticeRenderer;
+import com.payangar.collegeofwinterhold.client.entity.wizard.nature.NatureExpertRenderer;
+import com.payangar.collegeofwinterhold.client.entity.wizard.nature.NatureMasterRenderer;
+import com.payangar.collegeofwinterhold.client.entity.wizard.nature.NatureNoviceRenderer;
 import com.payangar.collegeofwinterhold.registry.ModEntityTypes;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -42,6 +52,16 @@ public final class ClientModBusEvents {
         event.registerEntityRenderer(ModEntityTypes.ICE_ADEPT.get(), IceAdeptRenderer::new);
         event.registerEntityRenderer(ModEntityTypes.ICE_EXPERT.get(), IceExpertRenderer::new);
         event.registerEntityRenderer(ModEntityTypes.ICE_MASTER.get(), IceMasterRenderer::new);
+        event.registerEntityRenderer(ModEntityTypes.ENDER_NOVICE.get(), EnderNoviceRenderer::new);
+        event.registerEntityRenderer(ModEntityTypes.ENDER_APPRENTICE.get(), EnderApprenticeRenderer::new);
+        event.registerEntityRenderer(ModEntityTypes.ENDER_ADEPT.get(), EnderAdeptRenderer::new);
+        event.registerEntityRenderer(ModEntityTypes.ENDER_EXPERT.get(), EnderExpertRenderer::new);
+        event.registerEntityRenderer(ModEntityTypes.ENDER_MASTER.get(), EnderMasterRenderer::new);
+        event.registerEntityRenderer(ModEntityTypes.NATURE_NOVICE.get(), NatureNoviceRenderer::new);
+        event.registerEntityRenderer(ModEntityTypes.NATURE_APPRENTICE.get(), NatureApprenticeRenderer::new);
+        event.registerEntityRenderer(ModEntityTypes.NATURE_ADEPT.get(), NatureAdeptRenderer::new);
+        event.registerEntityRenderer(ModEntityTypes.NATURE_EXPERT.get(), NatureExpertRenderer::new);
+        event.registerEntityRenderer(ModEntityTypes.NATURE_MASTER.get(), NatureMasterRenderer::new);
     }
 
     private ClientModBusEvents() {}

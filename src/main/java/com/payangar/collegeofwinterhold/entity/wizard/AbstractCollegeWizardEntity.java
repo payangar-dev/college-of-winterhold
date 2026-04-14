@@ -196,6 +196,11 @@ public abstract class AbstractCollegeWizardEntity extends NeutralWizard
     }
 
     @Override
+    public boolean removeWhenFarAway(double distanceToClosestPlayer) {
+        return false;
+    }
+
+    @Override
     public boolean isAlliedTo(Entity entity) {
         if (entity instanceof CollegeWizard) return true;
         if (entity instanceof IronGolem) return true;

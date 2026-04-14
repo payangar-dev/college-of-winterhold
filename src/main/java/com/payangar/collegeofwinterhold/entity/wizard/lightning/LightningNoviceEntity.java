@@ -1,24 +1,25 @@
 package com.payangar.collegeofwinterhold.entity.wizard.lightning;
 
+import com.payangar.collegeofwinterhold.entity.ai.CollegeSpellPools;
 import com.payangar.collegeofwinterhold.entity.ai.CollegeWizardAttackGoal;
+import com.payangar.collegeofwinterhold.entity.ai.RolledSpell;
 import com.payangar.collegeofwinterhold.entity.wizard.HipSpellbookHolder;
+import io.redspace.ironsspellbooks.api.registry.SchoolRegistry;
 import io.redspace.ironsspellbooks.api.registry.SpellRegistry;
 import io.redspace.ironsspellbooks.api.spells.AbstractSpell;
 import io.redspace.ironsspellbooks.api.spells.ISpellContainer;
+import io.redspace.ironsspellbooks.api.spells.SpellRarity;
 import io.redspace.ironsspellbooks.entity.mobs.abstract_spell_casting_mob.AbstractSpellCastingMob;
 import io.redspace.ironsspellbooks.entity.mobs.abstract_spell_casting_mob.NeutralWizard;
 import io.redspace.ironsspellbooks.entity.mobs.goals.PatrolNearLocationGoal;
 import io.redspace.ironsspellbooks.entity.mobs.goals.WizardRecoverGoal;
 import io.redspace.ironsspellbooks.registries.ItemRegistry;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.StringTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.DifficultyInstance;
@@ -44,23 +45,25 @@ import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 
 public class LightningNoviceEntity extends NeutralWizard implements HipSpellbookHolder {
     private static final EntityDataAccessor<ItemStack> HIP_SPELLBOOK =
             SynchedEntityData.defineId(LightningNoviceEntity.class, EntityDataSerializers.ITEM_STACK);
 
-    private static final List<String> LIGHTNING_COMMON_POOL = List.of(
-            "irons_spellbooks:volt_strike",
-            "irons_spellbooks:ball_lightning",
-            "irons_spellbooks:shockwave",
-            "irons_spellbooks:electrocute"
-    );
-
-    private static final int KNOWN_SPELL_COUNT = 2;
-    private static final int SPELL_LEVEL = 1;
+    // ── Tier configuration (Novice) ────────────────────────────────────────────
+    private static final int      KNOWN_NATIVE_COUNT  = 2;
+    private static final SpellRarity NATIVE_MAX_RARITY = SpellRarity.COMMON;
+    private static final int      NATIVE_LEVEL_MIN    = 1;
+    private static final int      NATIVE_LEVEL_MAX    = 1;
+    private static final int      KNOWN_FOREIGN_COUNT = 0;
+    private static final SpellRarity FOREIGN_MAX_RARITY = SpellRarity.COMMON; // unused at this tier
+    private static final int      FOREIGN_LEVEL_MIN   = 1;
+    private static final int      FOREIGN_LEVEL_MAX   = 1;
+    private static final int      BOOK_SLOTS          = 5;
 
     private CollegeWizardAttackGoal attackGoal;
-    private final List<AbstractSpell> knownSpells = new ArrayList<>();
+    private final List<RolledSpell> knownSpells = new ArrayList<>();
 
     @Nullable
     private String lastCastSpellId;
@@ -117,28 +120,41 @@ public class LightningNoviceEntity extends NeutralWizard implements HipSpellbook
     }
 
     private void rollLoadout(RandomSource rng) {
-        List<String> pool = new ArrayList<>(LIGHTNING_COMMON_POOL);
-        Collections.shuffle(pool, new java.util.Random(rng.nextLong()));
+        Random javaRng = new Random(rng.nextLong());
         knownSpells.clear();
-        for (int i = 0; i < KNOWN_SPELL_COUNT && i < pool.size(); i++) {
-            AbstractSpell spell = SpellRegistry.getSpell(pool.get(i));
-            if (spell != null && spell != SpellRegistry.none()) {
-                knownSpells.add(spell);
-            }
+
+        knownSpells.addAll(CollegeSpellPools.rollLoadout(
+                CollegeSpellPools.nativePool(SchoolRegistry.LIGHTNING, NATIVE_MAX_RARITY),
+                KNOWN_NATIVE_COUNT, NATIVE_LEVEL_MIN, NATIVE_LEVEL_MAX, javaRng));
+
+        if (KNOWN_FOREIGN_COUNT > 0) {
+            knownSpells.addAll(CollegeSpellPools.rollLoadout(
+                    CollegeSpellPools.foreignPool(SchoolRegistry.LIGHTNING, FOREIGN_MAX_RARITY),
+                    KNOWN_FOREIGN_COUNT, FOREIGN_LEVEL_MIN, FOREIGN_LEVEL_MAX, javaRng));
         }
     }
 
     private void applyLoadoutToGoal() {
         if (attackGoal == null) return;
-        attackGoal.setSpells(new ArrayList<>(knownSpells), List.of(), List.of(), List.of());
-        attackGoal.setSpellQuality(0f, 0.1f);
+        attackGoal.setLoadout(new ArrayList<>(knownSpells));
     }
 
     private void buildHipSpellbook() {
         ItemStack book = new ItemStack(ItemRegistry.COPPER_SPELL_BOOK.get());
-        var container = ISpellContainer.create(5, false, false).mutableCopy();
-        for (int i = 0; i < knownSpells.size(); i++) {
-            container.addSpellAtIndex(knownSpells.get(i), SPELL_LEVEL, i, true);
+        var container = ISpellContainer.create(BOOK_SLOTS, false, false).mutableCopy();
+
+        // If the wizard knows more spells than the book has slots (Master overflow),
+        // randomly sample BOOK_SLOTS of them. For tiers where knownSpells.size() <= BOOK_SLOTS
+        // this is a no-op truncation.
+        List<RolledSpell> bookContents = new ArrayList<>(knownSpells);
+        if (bookContents.size() > BOOK_SLOTS) {
+            Collections.shuffle(bookContents, new Random(this.random.nextLong()));
+            bookContents = bookContents.subList(0, BOOK_SLOTS);
+        }
+
+        for (int i = 0; i < bookContents.size(); i++) {
+            RolledSpell rs = bookContents.get(i);
+            container.addSpellAtIndex(rs.spell(), rs.level(), i, true);
         }
         ISpellContainer.set(book, container.toImmutable());
         this.entityData.set(HIP_SPELLBOOK, book);
@@ -153,8 +169,11 @@ public class LightningNoviceEntity extends NeutralWizard implements HipSpellbook
     public void addAdditionalSaveData(CompoundTag tag) {
         super.addAdditionalSaveData(tag);
         ListTag spellsTag = new ListTag();
-        for (AbstractSpell spell : knownSpells) {
-            spellsTag.add(StringTag.valueOf(spell.getSpellId()));
+        for (RolledSpell rolled : knownSpells) {
+            CompoundTag entry = new CompoundTag();
+            entry.putString("id", rolled.spell().getSpellId());
+            entry.putInt("level", rolled.level());
+            spellsTag.add(entry);
         }
         tag.put("KnownSpells", spellsTag);
 
@@ -172,11 +191,12 @@ public class LightningNoviceEntity extends NeutralWizard implements HipSpellbook
     public void readAdditionalSaveData(CompoundTag tag) {
         super.readAdditionalSaveData(tag);
         knownSpells.clear();
-        ListTag spellsTag = tag.getList("KnownSpells", Tag.TAG_STRING);
+        ListTag spellsTag = tag.getList("KnownSpells", Tag.TAG_COMPOUND);
         for (int i = 0; i < spellsTag.size(); i++) {
-            AbstractSpell spell = SpellRegistry.getSpell(spellsTag.getString(i));
+            CompoundTag entry = spellsTag.getCompound(i);
+            AbstractSpell spell = SpellRegistry.getSpell(entry.getString("id"));
             if (spell != null && spell != SpellRegistry.none()) {
-                knownSpells.add(spell);
+                knownSpells.add(new RolledSpell(spell, entry.getInt("level")));
             }
         }
         applyLoadoutToGoal();

@@ -15,6 +15,7 @@ public class CollegeWizardAttackGoal extends WizardAttackGoal {
     private static final double MELEE_THRESHOLD_SQR = 4.0 * 4.0;
     private static final double SURROUNDED_RADIUS = 6.0;
     private static final int SURROUNDED_THRESHOLD = 3;
+    private static final float CRITICAL_HP_RATIO = 0.30f;
 
     /** Per-spell cast level, populated by {@link #setLoadout(List)}. Allows native and
      * foreign spells of the same wizard to cast at different Iron's spell levels
@@ -74,9 +75,18 @@ public class CollegeWizardAttackGoal extends WizardAttackGoal {
     }
 
     /**
-     * Mirrors Iron's {@code doSpellAction} but resolves the spell level from
-     * {@link #spellLevels} instead of computing it from the global quality range.
-     * The single-use spell branch is unchanged.
+     * Mirrors Iron's {@code doSpellAction} but with two custom layers on top:
+     * <ol>
+     *   <li><b>Survival routine</b> at HP &lt; {@value #CRITICAL_HP_RATIO} :
+     *       force-cast a {@code MOVEMENT} spell if surrounded (escape), or a
+     *       {@code HEAL} spell otherwise (safe heal). Falls through to normal
+     *       weighting if the wizard doesn't have the matching spell.</li>
+     *   <li><b>Per-spell level resolution</b> : cast level is read from
+     *       {@link #spellLevels} instead of Iron's global quality range, so
+     *       native and foreign spells of the same wizard cast at different
+     *       Iron's levels.</li>
+     * </ol>
+     * The single-use spell branch is preserved as-is.
      */
     @Override
     protected void doSpellAction() {
@@ -85,6 +95,16 @@ public class CollegeWizardAttackGoal extends WizardAttackGoal {
             spellCastingMob.initiateCastSpell(singleUseSpell, singleUseLevel);
             fleeCooldown = 7 + singleUseSpell.getCastTime(singleUseLevel);
             return;
+        }
+
+        AbstractSpell survival = pickSurvivalSpell();
+        if (survival != null) {
+            int level = spellLevels.getOrDefault(survival.getSpellId(), 1);
+            if (!survival.shouldAIStopCasting(level, mob, target)) {
+                spellCastingMob.initiateCastSpell(survival, level);
+                fleeCooldown = 7 + survival.getCastTime(level);
+                return;
+            }
         }
 
         AbstractSpell spell = getNextSpellType();
@@ -99,6 +119,30 @@ public class CollegeWizardAttackGoal extends WizardAttackGoal {
         } else {
             spellAttackDelay = 5;
         }
+    }
+
+    /**
+     * Returns a MOVEMENT or HEAL spell to force-cast when the wizard is in
+     * critical HP, or {@code null} if no override applies (normal weighting will
+     * take over). Surrounded → escape via MOVEMENT. Otherwise → safe-zone HEAL.
+     */
+    private AbstractSpell pickSurvivalSpell() {
+        if (target == null) return null;
+        if (mob.getHealth() / mob.getMaxHealth() >= CRITICAL_HP_RATIO) return null;
+
+        if (isSurrounded()) {
+            if (!movementSpells.isEmpty()) {
+                return movementSpells.get(mob.getRandom().nextInt(movementSpells.size()));
+            }
+        } else {
+            // HEAL spells live in defenseSpells alongside DEFENSE — filter to HEAL only.
+            for (AbstractSpell spell : defenseSpells) {
+                if (SpellClassificationRegistry.of(spell).hasCategory(SpellCategory.HEAL)) {
+                    return spell;
+                }
+            }
+        }
+        return null;
     }
 
     @Override

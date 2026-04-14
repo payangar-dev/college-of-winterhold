@@ -1,6 +1,11 @@
 package com.payangar.collegeofwinterhold.event;
 
 import com.payangar.collegeofwinterhold.CollegeOfWinterhold;
+import com.payangar.collegeofwinterhold.entity.wizard.fire.FireAdeptEntity;
+import com.payangar.collegeofwinterhold.entity.wizard.fire.FireApprenticeEntity;
+import com.payangar.collegeofwinterhold.entity.wizard.fire.FireExpertEntity;
+import com.payangar.collegeofwinterhold.entity.wizard.fire.FireMasterEntity;
+import com.payangar.collegeofwinterhold.entity.wizard.fire.FireNoviceEntity;
 import com.payangar.collegeofwinterhold.entity.wizard.lightning.LightningAdeptEntity;
 import com.payangar.collegeofwinterhold.entity.wizard.lightning.LightningApprenticeEntity;
 import com.payangar.collegeofwinterhold.entity.wizard.lightning.LightningExpertEntity;
@@ -21,6 +26,11 @@ public final class ModBusEvents {
         event.put(ModEntityTypes.LIGHTNING_ADEPT.get(), LightningAdeptEntity.prepareAttributes().build());
         event.put(ModEntityTypes.LIGHTNING_EXPERT.get(), LightningExpertEntity.prepareAttributes().build());
         event.put(ModEntityTypes.LIGHTNING_MASTER.get(), LightningMasterEntity.prepareAttributes().build());
+        event.put(ModEntityTypes.FIRE_NOVICE.get(), FireNoviceEntity.prepareAttributes().build());
+        event.put(ModEntityTypes.FIRE_APPRENTICE.get(), FireApprenticeEntity.prepareAttributes().build());
+        event.put(ModEntityTypes.FIRE_ADEPT.get(), FireAdeptEntity.prepareAttributes().build());
+        event.put(ModEntityTypes.FIRE_EXPERT.get(), FireExpertEntity.prepareAttributes().build());
+        event.put(ModEntityTypes.FIRE_MASTER.get(), FireMasterEntity.prepareAttributes().build());
     }
 
     private ModBusEvents() {}

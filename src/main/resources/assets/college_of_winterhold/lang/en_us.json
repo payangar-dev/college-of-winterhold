@@ -6,9 +6,19 @@
   "entity.college_of_winterhold.lightning_adept": "Lightning Adept",
   "entity.college_of_winterhold.lightning_expert": "Lightning Expert",
   "entity.college_of_winterhold.lightning_master": "Lightning Master",
+  "entity.college_of_winterhold.fire_novice": "Fire Novice",
+  "entity.college_of_winterhold.fire_apprentice": "Fire Apprentice",
+  "entity.college_of_winterhold.fire_adept": "Fire Adept",
+  "entity.college_of_winterhold.fire_expert": "Fire Expert",
+  "entity.college_of_winterhold.fire_master": "Fire Master",
   "item.college_of_winterhold.lightning_novice_spawn_egg": "Lightning Novice Spawn Egg",
   "item.college_of_winterhold.lightning_apprentice_spawn_egg": "Lightning Apprentice Spawn Egg",
   "item.college_of_winterhold.lightning_adept_spawn_egg": "Lightning Adept Spawn Egg",
   "item.college_of_winterhold.lightning_expert_spawn_egg": "Lightning Expert Spawn Egg",
-  "item.college_of_winterhold.lightning_master_spawn_egg": "Lightning Master Spawn Egg"
+  "item.college_of_winterhold.lightning_master_spawn_egg": "Lightning Master Spawn Egg",
+  "item.college_of_winterhold.fire_novice_spawn_egg": "Fire Novice Spawn Egg",
+  "item.college_of_winterhold.fire_apprentice_spawn_egg": "Fire Apprentice Spawn Egg",
+  "item.college_of_winterhold.fire_adept_spawn_egg": "Fire Adept Spawn Egg",
+  "item.college_of_winterhold.fire_expert_spawn_egg": "Fire Expert Spawn Egg",
+  "item.college_of_winterhold.fire_master_spawn_egg": "Fire Master Spawn Egg"
 }

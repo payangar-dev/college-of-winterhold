@@ -1,6 +1,11 @@
 package com.payangar.collegeofwinterhold.registry;
 
 import com.payangar.collegeofwinterhold.CollegeOfWinterhold;
+import com.payangar.collegeofwinterhold.entity.wizard.fire.FireAdeptEntity;
+import com.payangar.collegeofwinterhold.entity.wizard.fire.FireApprenticeEntity;
+import com.payangar.collegeofwinterhold.entity.wizard.fire.FireExpertEntity;
+import com.payangar.collegeofwinterhold.entity.wizard.fire.FireMasterEntity;
+import com.payangar.collegeofwinterhold.entity.wizard.fire.FireNoviceEntity;
 import com.payangar.collegeofwinterhold.entity.wizard.lightning.LightningAdeptEntity;
 import com.payangar.collegeofwinterhold.entity.wizard.lightning.LightningApprenticeEntity;
 import com.payangar.collegeofwinterhold.entity.wizard.lightning.LightningExpertEntity;
@@ -52,6 +57,41 @@ public final class ModEntityTypes {
                     .sized(0.6f, 1.8f)
                     .clientTrackingRange(64)
                     .build(ResourceLocation.fromNamespaceAndPath(CollegeOfWinterhold.MODID, "lightning_master").toString()));
+
+    public static final DeferredHolder<EntityType<?>, EntityType<FireNoviceEntity>> FIRE_NOVICE =
+            ENTITIES.register("fire_novice", () -> EntityType.Builder
+                    .of(FireNoviceEntity::new, MobCategory.MONSTER)
+                    .sized(0.6f, 1.8f)
+                    .clientTrackingRange(64)
+                    .build(ResourceLocation.fromNamespaceAndPath(CollegeOfWinterhold.MODID, "fire_novice").toString()));
+
+    public static final DeferredHolder<EntityType<?>, EntityType<FireApprenticeEntity>> FIRE_APPRENTICE =
+            ENTITIES.register("fire_apprentice", () -> EntityType.Builder
+                    .of(FireApprenticeEntity::new, MobCategory.MONSTER)
+                    .sized(0.6f, 1.8f)
+                    .clientTrackingRange(64)
+                    .build(ResourceLocation.fromNamespaceAndPath(CollegeOfWinterhold.MODID, "fire_apprentice").toString()));
+
+    public static final DeferredHolder<EntityType<?>, EntityType<FireAdeptEntity>> FIRE_ADEPT =
+            ENTITIES.register("fire_adept", () -> EntityType.Builder
+                    .of(FireAdeptEntity::new, MobCategory.MONSTER)
+                    .sized(0.6f, 1.8f)
+                    .clientTrackingRange(64)
+                    .build(ResourceLocation.fromNamespaceAndPath(CollegeOfWinterhold.MODID, "fire_adept").toString()));
+
+    public static final DeferredHolder<EntityType<?>, EntityType<FireExpertEntity>> FIRE_EXPERT =
+            ENTITIES.register("fire_expert", () -> EntityType.Builder
+                    .of(FireExpertEntity::new, MobCategory.MONSTER)
+                    .sized(0.6f, 1.8f)
+                    .clientTrackingRange(64)
+                    .build(ResourceLocation.fromNamespaceAndPath(CollegeOfWinterhold.MODID, "fire_expert").toString()));
+
+    public static final DeferredHolder<EntityType<?>, EntityType<FireMasterEntity>> FIRE_MASTER =
+            ENTITIES.register("fire_master", () -> EntityType.Builder
+                    .of(FireMasterEntity::new, MobCategory.MONSTER)
+                    .sized(0.6f, 1.8f)
+                    .clientTrackingRange(64)
+                    .build(ResourceLocation.fromNamespaceAndPath(CollegeOfWinterhold.MODID, "fire_master").toString()));
 
     public static void register(IEventBus bus) {
         ENTITIES.register(bus);

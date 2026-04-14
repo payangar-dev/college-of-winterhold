@@ -47,6 +47,41 @@ public final class ModItems {
                     0xF5D742,
                     new Item.Properties().stacksTo(64)));
 
+    public static final DeferredItem<Item> FIRE_NOVICE_SPAWN_EGG =
+            ITEMS.register("fire_novice_spawn_egg", () -> new DeferredSpawnEggItem(
+                    ModEntityTypes.FIRE_NOVICE,
+                    0x7A1A0A,
+                    0xF59E2C,
+                    new Item.Properties().stacksTo(64)));
+
+    public static final DeferredItem<Item> FIRE_APPRENTICE_SPAWN_EGG =
+            ITEMS.register("fire_apprentice_spawn_egg", () -> new DeferredSpawnEggItem(
+                    ModEntityTypes.FIRE_APPRENTICE,
+                    0x7A1A0A,
+                    0xF59E2C,
+                    new Item.Properties().stacksTo(64)));
+
+    public static final DeferredItem<Item> FIRE_ADEPT_SPAWN_EGG =
+            ITEMS.register("fire_adept_spawn_egg", () -> new DeferredSpawnEggItem(
+                    ModEntityTypes.FIRE_ADEPT,
+                    0x7A1A0A,
+                    0xF59E2C,
+                    new Item.Properties().stacksTo(64)));
+
+    public static final DeferredItem<Item> FIRE_EXPERT_SPAWN_EGG =
+            ITEMS.register("fire_expert_spawn_egg", () -> new DeferredSpawnEggItem(
+                    ModEntityTypes.FIRE_EXPERT,
+                    0x7A1A0A,
+                    0xF59E2C,
+                    new Item.Properties().stacksTo(64)));
+
+    public static final DeferredItem<Item> FIRE_MASTER_SPAWN_EGG =
+            ITEMS.register("fire_master_spawn_egg", () -> new DeferredSpawnEggItem(
+                    ModEntityTypes.FIRE_MASTER,
+                    0x7A1A0A,
+                    0xF59E2C,
+                    new Item.Properties().stacksTo(64)));
+
     public static void register(IEventBus bus) {
         ITEMS.register(bus);
     }

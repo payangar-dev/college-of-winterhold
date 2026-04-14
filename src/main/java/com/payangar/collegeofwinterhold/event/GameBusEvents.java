@@ -1,6 +1,11 @@
 package com.payangar.collegeofwinterhold.event;
 
 import com.payangar.collegeofwinterhold.CollegeOfWinterhold;
+import com.payangar.collegeofwinterhold.entity.wizard.fire.FireAdeptEntity;
+import com.payangar.collegeofwinterhold.entity.wizard.fire.FireApprenticeEntity;
+import com.payangar.collegeofwinterhold.entity.wizard.fire.FireExpertEntity;
+import com.payangar.collegeofwinterhold.entity.wizard.fire.FireMasterEntity;
+import com.payangar.collegeofwinterhold.entity.wizard.fire.FireNoviceEntity;
 import com.payangar.collegeofwinterhold.entity.wizard.lightning.LightningAdeptEntity;
 import com.payangar.collegeofwinterhold.entity.wizard.lightning.LightningApprenticeEntity;
 import com.payangar.collegeofwinterhold.entity.wizard.lightning.LightningExpertEntity;
@@ -37,6 +42,16 @@ public final class GameBusEvents {
                     monster, LightningExpertEntity.class, true));
             monster.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(
                     monster, LightningMasterEntity.class, true));
+            monster.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(
+                    monster, FireNoviceEntity.class, true));
+            monster.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(
+                    monster, FireApprenticeEntity.class, true));
+            monster.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(
+                    monster, FireAdeptEntity.class, true));
+            monster.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(
+                    monster, FireExpertEntity.class, true));
+            monster.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(
+                    monster, FireMasterEntity.class, true));
         }
     }
 

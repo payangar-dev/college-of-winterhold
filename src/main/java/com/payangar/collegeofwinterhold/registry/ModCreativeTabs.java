@@ -28,6 +28,11 @@ public final class ModCreativeTabs {
                         output.accept(ModItems.FIRE_ADEPT_SPAWN_EGG.get());
                         output.accept(ModItems.FIRE_EXPERT_SPAWN_EGG.get());
                         output.accept(ModItems.FIRE_MASTER_SPAWN_EGG.get());
+                        output.accept(ModItems.ICE_NOVICE_SPAWN_EGG.get());
+                        output.accept(ModItems.ICE_APPRENTICE_SPAWN_EGG.get());
+                        output.accept(ModItems.ICE_ADEPT_SPAWN_EGG.get());
+                        output.accept(ModItems.ICE_EXPERT_SPAWN_EGG.get());
+                        output.accept(ModItems.ICE_MASTER_SPAWN_EGG.get());
                     })
                     .build());
 

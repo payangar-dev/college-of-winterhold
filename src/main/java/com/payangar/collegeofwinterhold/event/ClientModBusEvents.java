@@ -6,6 +6,11 @@ import com.payangar.collegeofwinterhold.client.entity.wizard.fire.FireApprentice
 import com.payangar.collegeofwinterhold.client.entity.wizard.fire.FireExpertRenderer;
 import com.payangar.collegeofwinterhold.client.entity.wizard.fire.FireMasterRenderer;
 import com.payangar.collegeofwinterhold.client.entity.wizard.fire.FireNoviceRenderer;
+import com.payangar.collegeofwinterhold.client.entity.wizard.ice.IceAdeptRenderer;
+import com.payangar.collegeofwinterhold.client.entity.wizard.ice.IceApprenticeRenderer;
+import com.payangar.collegeofwinterhold.client.entity.wizard.ice.IceExpertRenderer;
+import com.payangar.collegeofwinterhold.client.entity.wizard.ice.IceMasterRenderer;
+import com.payangar.collegeofwinterhold.client.entity.wizard.ice.IceNoviceRenderer;
 import com.payangar.collegeofwinterhold.client.entity.wizard.lightning.LightningAdeptRenderer;
 import com.payangar.collegeofwinterhold.client.entity.wizard.lightning.LightningApprenticeRenderer;
 import com.payangar.collegeofwinterhold.client.entity.wizard.lightning.LightningExpertRenderer;
@@ -32,6 +37,11 @@ public final class ClientModBusEvents {
         event.registerEntityRenderer(ModEntityTypes.FIRE_ADEPT.get(), FireAdeptRenderer::new);
         event.registerEntityRenderer(ModEntityTypes.FIRE_EXPERT.get(), FireExpertRenderer::new);
         event.registerEntityRenderer(ModEntityTypes.FIRE_MASTER.get(), FireMasterRenderer::new);
+        event.registerEntityRenderer(ModEntityTypes.ICE_NOVICE.get(), IceNoviceRenderer::new);
+        event.registerEntityRenderer(ModEntityTypes.ICE_APPRENTICE.get(), IceApprenticeRenderer::new);
+        event.registerEntityRenderer(ModEntityTypes.ICE_ADEPT.get(), IceAdeptRenderer::new);
+        event.registerEntityRenderer(ModEntityTypes.ICE_EXPERT.get(), IceExpertRenderer::new);
+        event.registerEntityRenderer(ModEntityTypes.ICE_MASTER.get(), IceMasterRenderer::new);
     }
 
     private ClientModBusEvents() {}

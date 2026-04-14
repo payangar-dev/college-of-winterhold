@@ -82,6 +82,41 @@ public final class ModItems {
                     0xF59E2C,
                     new Item.Properties().stacksTo(64)));
 
+    public static final DeferredItem<Item> ICE_NOVICE_SPAWN_EGG =
+            ITEMS.register("ice_novice_spawn_egg", () -> new DeferredSpawnEggItem(
+                    ModEntityTypes.ICE_NOVICE,
+                    0x8EC5E8,
+                    0xFFFFFF,
+                    new Item.Properties().stacksTo(64)));
+
+    public static final DeferredItem<Item> ICE_APPRENTICE_SPAWN_EGG =
+            ITEMS.register("ice_apprentice_spawn_egg", () -> new DeferredSpawnEggItem(
+                    ModEntityTypes.ICE_APPRENTICE,
+                    0x8EC5E8,
+                    0xFFFFFF,
+                    new Item.Properties().stacksTo(64)));
+
+    public static final DeferredItem<Item> ICE_ADEPT_SPAWN_EGG =
+            ITEMS.register("ice_adept_spawn_egg", () -> new DeferredSpawnEggItem(
+                    ModEntityTypes.ICE_ADEPT,
+                    0x8EC5E8,
+                    0xFFFFFF,
+                    new Item.Properties().stacksTo(64)));
+
+    public static final DeferredItem<Item> ICE_EXPERT_SPAWN_EGG =
+            ITEMS.register("ice_expert_spawn_egg", () -> new DeferredSpawnEggItem(
+                    ModEntityTypes.ICE_EXPERT,
+                    0x8EC5E8,
+                    0xFFFFFF,
+                    new Item.Properties().stacksTo(64)));
+
+    public static final DeferredItem<Item> ICE_MASTER_SPAWN_EGG =
+            ITEMS.register("ice_master_spawn_egg", () -> new DeferredSpawnEggItem(
+                    ModEntityTypes.ICE_MASTER,
+                    0x8EC5E8,
+                    0xFFFFFF,
+                    new Item.Properties().stacksTo(64)));
+
     public static void register(IEventBus bus) {
         ITEMS.register(bus);
     }

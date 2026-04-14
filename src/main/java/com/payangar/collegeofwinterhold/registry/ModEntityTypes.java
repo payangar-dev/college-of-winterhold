@@ -6,6 +6,11 @@ import com.payangar.collegeofwinterhold.entity.wizard.fire.FireApprenticeEntity;
 import com.payangar.collegeofwinterhold.entity.wizard.fire.FireExpertEntity;
 import com.payangar.collegeofwinterhold.entity.wizard.fire.FireMasterEntity;
 import com.payangar.collegeofwinterhold.entity.wizard.fire.FireNoviceEntity;
+import com.payangar.collegeofwinterhold.entity.wizard.ice.IceAdeptEntity;
+import com.payangar.collegeofwinterhold.entity.wizard.ice.IceApprenticeEntity;
+import com.payangar.collegeofwinterhold.entity.wizard.ice.IceExpertEntity;
+import com.payangar.collegeofwinterhold.entity.wizard.ice.IceMasterEntity;
+import com.payangar.collegeofwinterhold.entity.wizard.ice.IceNoviceEntity;
 import com.payangar.collegeofwinterhold.entity.wizard.lightning.LightningAdeptEntity;
 import com.payangar.collegeofwinterhold.entity.wizard.lightning.LightningApprenticeEntity;
 import com.payangar.collegeofwinterhold.entity.wizard.lightning.LightningExpertEntity;
@@ -92,6 +97,41 @@ public final class ModEntityTypes {
                     .sized(0.6f, 1.8f)
                     .clientTrackingRange(64)
                     .build(ResourceLocation.fromNamespaceAndPath(CollegeOfWinterhold.MODID, "fire_master").toString()));
+
+    public static final DeferredHolder<EntityType<?>, EntityType<IceNoviceEntity>> ICE_NOVICE =
+            ENTITIES.register("ice_novice", () -> EntityType.Builder
+                    .of(IceNoviceEntity::new, MobCategory.MONSTER)
+                    .sized(0.6f, 1.8f)
+                    .clientTrackingRange(64)
+                    .build(ResourceLocation.fromNamespaceAndPath(CollegeOfWinterhold.MODID, "ice_novice").toString()));
+
+    public static final DeferredHolder<EntityType<?>, EntityType<IceApprenticeEntity>> ICE_APPRENTICE =
+            ENTITIES.register("ice_apprentice", () -> EntityType.Builder
+                    .of(IceApprenticeEntity::new, MobCategory.MONSTER)
+                    .sized(0.6f, 1.8f)
+                    .clientTrackingRange(64)
+                    .build(ResourceLocation.fromNamespaceAndPath(CollegeOfWinterhold.MODID, "ice_apprentice").toString()));
+
+    public static final DeferredHolder<EntityType<?>, EntityType<IceAdeptEntity>> ICE_ADEPT =
+            ENTITIES.register("ice_adept", () -> EntityType.Builder
+                    .of(IceAdeptEntity::new, MobCategory.MONSTER)
+                    .sized(0.6f, 1.8f)
+                    .clientTrackingRange(64)
+                    .build(ResourceLocation.fromNamespaceAndPath(CollegeOfWinterhold.MODID, "ice_adept").toString()));
+
+    public static final DeferredHolder<EntityType<?>, EntityType<IceExpertEntity>> ICE_EXPERT =
+            ENTITIES.register("ice_expert", () -> EntityType.Builder
+                    .of(IceExpertEntity::new, MobCategory.MONSTER)
+                    .sized(0.6f, 1.8f)
+                    .clientTrackingRange(64)
+                    .build(ResourceLocation.fromNamespaceAndPath(CollegeOfWinterhold.MODID, "ice_expert").toString()));
+
+    public static final DeferredHolder<EntityType<?>, EntityType<IceMasterEntity>> ICE_MASTER =
+            ENTITIES.register("ice_master", () -> EntityType.Builder
+                    .of(IceMasterEntity::new, MobCategory.MONSTER)
+                    .sized(0.6f, 1.8f)
+                    .clientTrackingRange(64)
+                    .build(ResourceLocation.fromNamespaceAndPath(CollegeOfWinterhold.MODID, "ice_master").toString()));
 
     public static void register(IEventBus bus) {
         ENTITIES.register(bus);

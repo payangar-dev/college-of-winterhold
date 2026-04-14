@@ -17,6 +17,14 @@ public enum CollegeSchool {
                     ItemRegistry.PYROMANCER_CHESTPLATE,
                     ItemRegistry.PYROMANCER_LEGGINGS,
                     ItemRegistry.PYROMANCER_BOOTS)),
+    ICE(
+            SchoolRegistry.ICE,
+            SchoolTendency.ICE,
+            new SchoolArmorSet(
+                    ItemRegistry.CRYOMANCER_HELMET,
+                    ItemRegistry.CRYOMANCER_CHESTPLATE,
+                    ItemRegistry.CRYOMANCER_LEGGINGS,
+                    ItemRegistry.CRYOMANCER_BOOTS)),
     LIGHTNING(
             SchoolRegistry.LIGHTNING,
             SchoolTendency.LIGHTNING,

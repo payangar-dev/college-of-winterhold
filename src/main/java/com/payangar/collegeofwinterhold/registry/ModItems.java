@@ -19,6 +19,34 @@ public final class ModItems {
                     0xF5D742,
                     new Item.Properties().stacksTo(64)));
 
+    public static final DeferredItem<Item> LIGHTNING_APPRENTICE_SPAWN_EGG =
+            ITEMS.register("lightning_apprentice_spawn_egg", () -> new DeferredSpawnEggItem(
+                    ModEntityTypes.LIGHTNING_APPRENTICE,
+                    0x0B1033,
+                    0xF5D742,
+                    new Item.Properties().stacksTo(64)));
+
+    public static final DeferredItem<Item> LIGHTNING_ADEPT_SPAWN_EGG =
+            ITEMS.register("lightning_adept_spawn_egg", () -> new DeferredSpawnEggItem(
+                    ModEntityTypes.LIGHTNING_ADEPT,
+                    0x0B1033,
+                    0xF5D742,
+                    new Item.Properties().stacksTo(64)));
+
+    public static final DeferredItem<Item> LIGHTNING_EXPERT_SPAWN_EGG =
+            ITEMS.register("lightning_expert_spawn_egg", () -> new DeferredSpawnEggItem(
+                    ModEntityTypes.LIGHTNING_EXPERT,
+                    0x0B1033,
+                    0xF5D742,
+                    new Item.Properties().stacksTo(64)));
+
+    public static final DeferredItem<Item> LIGHTNING_MASTER_SPAWN_EGG =
+            ITEMS.register("lightning_master_spawn_egg", () -> new DeferredSpawnEggItem(
+                    ModEntityTypes.LIGHTNING_MASTER,
+                    0x0B1033,
+                    0xF5D742,
+                    new Item.Properties().stacksTo(64)));
+
     public static void register(IEventBus bus) {
         ITEMS.register(bus);
     }

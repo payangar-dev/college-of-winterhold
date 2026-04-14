@@ -2,5 +2,13 @@
   "mod.college_of_winterhold.name": "College of Winterhold",
   "itemGroup.college_of_winterhold": "College of Winterhold",
   "entity.college_of_winterhold.lightning_novice": "Lightning Novice",
-  "item.college_of_winterhold.lightning_novice_spawn_egg": "Lightning Novice Spawn Egg"
+  "entity.college_of_winterhold.lightning_apprentice": "Lightning Apprentice",
+  "entity.college_of_winterhold.lightning_adept": "Lightning Adept",
+  "entity.college_of_winterhold.lightning_expert": "Lightning Expert",
+  "entity.college_of_winterhold.lightning_master": "Lightning Master",
+  "item.college_of_winterhold.lightning_novice_spawn_egg": "Lightning Novice Spawn Egg",
+  "item.college_of_winterhold.lightning_apprentice_spawn_egg": "Lightning Apprentice Spawn Egg",
+  "item.college_of_winterhold.lightning_adept_spawn_egg": "Lightning Adept Spawn Egg",
+  "item.college_of_winterhold.lightning_expert_spawn_egg": "Lightning Expert Spawn Egg",
+  "item.college_of_winterhold.lightning_master_spawn_egg": "Lightning Master Spawn Egg"
 }

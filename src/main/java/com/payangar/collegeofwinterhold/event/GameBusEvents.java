@@ -1,6 +1,10 @@
 package com.payangar.collegeofwinterhold.event;
 
 import com.payangar.collegeofwinterhold.CollegeOfWinterhold;
+import com.payangar.collegeofwinterhold.entity.wizard.lightning.LightningAdeptEntity;
+import com.payangar.collegeofwinterhold.entity.wizard.lightning.LightningApprenticeEntity;
+import com.payangar.collegeofwinterhold.entity.wizard.lightning.LightningExpertEntity;
+import com.payangar.collegeofwinterhold.entity.wizard.lightning.LightningMasterEntity;
 import com.payangar.collegeofwinterhold.entity.wizard.lightning.LightningNoviceEntity;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.monster.Monster;
@@ -14,7 +18,7 @@ import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
 public final class GameBusEvents {
 
     /**
-     * Injects a target goal on every vanilla-style hostile that spawns, telling it
+     * Injects target goals on every vanilla-style hostile that spawns, telling it
      * to attack our neutral mages on sight — same principle Minecraft hardcodes for
      * Iron Golems. Without this, zombies and the like would ignore a College wizard
      * entirely, breaking the "neutral but attackable by hostiles" contract.
@@ -25,6 +29,14 @@ public final class GameBusEvents {
         if (event.getEntity() instanceof Monster monster) {
             monster.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(
                     monster, LightningNoviceEntity.class, true));
+            monster.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(
+                    monster, LightningApprenticeEntity.class, true));
+            monster.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(
+                    monster, LightningAdeptEntity.class, true));
+            monster.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(
+                    monster, LightningExpertEntity.class, true));
+            monster.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(
+                    monster, LightningMasterEntity.class, true));
         }
     }
 

@@ -19,6 +19,10 @@ public final class ModCreativeTabs {
                     .icon(() -> new ItemStack(ModItems.LIGHTNING_NOVICE_SPAWN_EGG.get()))
                     .displayItems((params, output) -> {
                         output.accept(ModItems.LIGHTNING_NOVICE_SPAWN_EGG.get());
+                        output.accept(ModItems.LIGHTNING_APPRENTICE_SPAWN_EGG.get());
+                        output.accept(ModItems.LIGHTNING_ADEPT_SPAWN_EGG.get());
+                        output.accept(ModItems.LIGHTNING_EXPERT_SPAWN_EGG.get());
+                        output.accept(ModItems.LIGHTNING_MASTER_SPAWN_EGG.get());
                     })
                     .build());
 

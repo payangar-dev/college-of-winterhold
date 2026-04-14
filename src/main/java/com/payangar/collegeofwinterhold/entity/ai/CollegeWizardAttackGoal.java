@@ -23,8 +23,27 @@ public class CollegeWizardAttackGoal extends WizardAttackGoal {
      * {@code minSpellQuality}/{@code maxSpellQuality} are global and cannot model this. */
     private final Map<String, Integer> spellLevels = new HashMap<>();
 
+    /** School-specific behavioral tuning applied via {@link #setTendency(SchoolTendency)}.
+     * Defaults to {@link SchoolTendency#NEUTRAL} so the goal behaves like a stock
+     * Iron's wizard until an entity explicitly sets its school's tendency. */
+    private SchoolTendency tendency = SchoolTendency.NEUTRAL;
+
     public CollegeWizardAttackGoal(IMagicEntity mob, double speedModifier, int attackIntervalMin, int attackIntervalMax) {
         super(mob, speedModifier, attackIntervalMin, attackIntervalMax);
+    }
+
+    /**
+     * Stores the school tendency and applies its two direct-field knobs to Iron's
+     * own state ({@code spellcastingRange} and {@code allowFleeing}). The four
+     * weight multipliers are consumed lazily inside the {@code getXxxWeight()}
+     * overrides every time Iron's recomputes the category pick.
+     */
+    public CollegeWizardAttackGoal setTendency(SchoolTendency tendency) {
+        this.tendency = tendency;
+        this.spellcastingRange = tendency.spellcastingRange();
+        this.spellcastingRangeSqr = this.spellcastingRange * this.spellcastingRange;
+        this.allowFleeing = tendency.allowFleeing();
+        return this;
     }
 
     /**
@@ -200,5 +219,25 @@ public class CollegeWizardAttackGoal extends WizardAttackGoal {
                 mob.getBoundingBox().inflate(SURROUNDED_RADIUS),
                 e -> e != mob && e.isAlive() && mob.canAttack(e)
         ).size() >= SURROUNDED_THRESHOLD;
+    }
+
+    @Override
+    protected int getAttackWeight() {
+        return Math.round(super.getAttackWeight() * tendency.attackWeightMult());
+    }
+
+    @Override
+    protected int getDefenseWeight() {
+        return Math.round(super.getDefenseWeight() * tendency.defenseWeightMult());
+    }
+
+    @Override
+    protected int getMovementWeight() {
+        return Math.round(super.getMovementWeight() * tendency.movementWeightMult());
+    }
+
+    @Override
+    protected int getSupportWeight() {
+        return Math.round(super.getSupportWeight() * tendency.supportWeightMult());
     }
 }

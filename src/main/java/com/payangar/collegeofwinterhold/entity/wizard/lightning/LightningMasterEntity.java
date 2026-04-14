@@ -3,6 +3,7 @@ package com.payangar.collegeofwinterhold.entity.wizard.lightning;
 import com.payangar.collegeofwinterhold.entity.ai.CollegeSpellPools;
 import com.payangar.collegeofwinterhold.entity.ai.CollegeWizardAttackGoal;
 import com.payangar.collegeofwinterhold.entity.ai.RolledSpell;
+import com.payangar.collegeofwinterhold.entity.ai.SchoolTendency;
 import com.payangar.collegeofwinterhold.entity.ai.WizardPreCombatBuffGoal;
 import com.payangar.collegeofwinterhold.entity.wizard.CollegeWizard;
 import com.payangar.collegeofwinterhold.entity.wizard.CollegeWizardEquipment;
@@ -56,6 +57,13 @@ public class LightningMasterEntity extends NeutralWizard implements HipSpellbook
     private static final EntityDataAccessor<ItemStack> HIP_SPELLBOOK =
             SynchedEntityData.defineId(LightningMasterEntity.class, EntityDataSerializers.ITEM_STACK);
 
+    private static final CollegeWizardEquipment.SchoolArmorSet ELECTROMANCER_SET =
+            new CollegeWizardEquipment.SchoolArmorSet(
+                    ItemRegistry.ELECTROMANCER_HELMET,
+                    ItemRegistry.ELECTROMANCER_CHESTPLATE,
+                    ItemRegistry.ELECTROMANCER_LEGGINGS,
+                    ItemRegistry.ELECTROMANCER_BOOTS);
+
     // ── Tier configuration (Master) ────────────────────────────────────────────
     // Master overflow rule: 12 known spells but the diamond spell book has only
     // 10 slots → 10 are randomly sampled at spawn for the hip/dropped book, while
@@ -103,7 +111,7 @@ public class LightningMasterEntity extends NeutralWizard implements HipSpellbook
         this.goalSelector.addGoal(1, new FloatGoal(this));
         this.preCombatBuffGoal = new WizardPreCombatBuffGoal(this);
         this.goalSelector.addGoal(2, this.preCombatBuffGoal);
-        this.attackGoal = new CollegeWizardAttackGoal(this, 1.1f, 40, 80);
+        this.attackGoal = new CollegeWizardAttackGoal(this, 1.1f, 40, 80).setTendency(SchoolTendency.LIGHTNING);
         this.goalSelector.addGoal(3, this.attackGoal);
         this.goalSelector.addGoal(4, new PatrolNearLocationGoal(this, 30, 0.75f));
         this.goalSelector.addGoal(8, new LookAtPlayerGoal(this, Player.class, 8.0f));
@@ -120,7 +128,7 @@ public class LightningMasterEntity extends NeutralWizard implements HipSpellbook
         rollLoadout(this.random);
         applyLoadoutToGoal();
         buildHipSpellbook();
-        CollegeWizardEquipment.applyMasterArmor(this, this.random);
+        CollegeWizardEquipment.applyMasterArmor(this, this.random, ELECTROMANCER_SET);
         return super.finalizeSpawn(level, difficulty, reason, spawnData);
     }
 

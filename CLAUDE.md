@@ -34,7 +34,10 @@ Minecraft mod that adds wizard entities organised into elemental schools, built 
 - Access transformers: `src/main/resources/META-INF/accesstransformer.cfg`. Currently exposes `net.minecraft.world.entity.Mob.targetSelector` so `GameBusEvents` can inject a `NearestAttackableTargetGoal` on every vanilla `Monster` that spawns (the "hostile mobs attack our neutral mages" mechanic).
 - Spell-access from Iron's: prefer `io.redspace.ironsspellbooks.api.registry.SpellRegistry.getSpell("irons_spellbooks:<id>")` over importing constants from the internal `registries/SpellRegistry`. Items (`ARCANE_ESSENCE`, `SCROLL`, `COPPER_SPELL_BOOK`, etc.) live in the internal `io.redspace.ironsspellbooks.registries.ItemRegistry`; imports work but stay aware it's technically internal.
 - Keep the scaffold minimal. Do not add speculative registries/classes "for later".
-- Wizard entities: **copy/paste verbatim** for the first 10 (5 tiers × 2 schools). No abstract base, no interface hierarchy. Refactor only once the full matrix exists — see auto-memory `feedback_wizard_refactor_timing.md`.
+- Wizard entities: extend `AbstractCollegeWizardEntity` and implement two hooks — `tier()` returning a `WizardTier` enum value, `school()` returning a `CollegeSchool` enum value. Static `prepareAttributes()` forwards to `AbstractCollegeWizardEntity.buildAttributes(tier)`. **All shared behavior** (goals, NBT, hip spellbook, drop table with looting, alliance logic) lives on the base class — do not duplicate it on concrete subclasses. Concrete entities should stay ~20 lines.
+- Adding a new tier = add a value to `WizardTier` (stats, counts, rarities, book slots, xpReward, spellbook item, armor dispatch).
+- Adding a new school = add a value to `CollegeSchool` (Iron's `SchoolType` supplier, `SchoolTendency`, `SchoolArmorSet`).
+- `WizardTier` / `CollegeSchool` live under `entity.wizard.core`. `AbstractCollegeWizardEntity` lives under `entity.wizard`.
 
 ## Git & CI
 - **One branch per MC version.** Default branch: `1.21.1`. Never mix versions in one branch.

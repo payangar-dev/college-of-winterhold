@@ -1,3 +1,6 @@
 {
-  "mod.college_of_winterhold.name": "College of Winterhold"
+  "mod.college_of_winterhold.name": "College of Winterhold",
+  "itemGroup.college_of_winterhold": "College of Winterhold",
+  "entity.college_of_winterhold.lightning_novice": "Lightning Novice",
+  "item.college_of_winterhold.lightning_novice_spawn_egg": "Lightning Novice Spawn Egg"
 }

@@ -1,6 +1,9 @@
 package com.payangar.collegeofwinterhold;
 
 import com.mojang.logging.LogUtils;
+import com.payangar.collegeofwinterhold.registry.ModCreativeTabs;
+import com.payangar.collegeofwinterhold.registry.ModEntityTypes;
+import com.payangar.collegeofwinterhold.registry.ModItems;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
@@ -13,5 +16,8 @@ public class CollegeOfWinterhold {
 
     public CollegeOfWinterhold(IEventBus modEventBus, ModContainer modContainer) {
         LOGGER.info("College of Winterhold is loading");
+        ModEntityTypes.register(modEventBus);
+        ModItems.register(modEventBus);
+        ModCreativeTabs.register(modEventBus);
     }
 }

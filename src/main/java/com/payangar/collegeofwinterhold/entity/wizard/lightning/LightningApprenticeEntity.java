@@ -4,6 +4,7 @@ import com.payangar.collegeofwinterhold.entity.ai.CollegeSpellPools;
 import com.payangar.collegeofwinterhold.entity.ai.CollegeWizardAttackGoal;
 import com.payangar.collegeofwinterhold.entity.ai.RolledSpell;
 import com.payangar.collegeofwinterhold.entity.ai.WizardPreCombatBuffGoal;
+import com.payangar.collegeofwinterhold.entity.wizard.CollegeWizard;
 import com.payangar.collegeofwinterhold.entity.wizard.CollegeWizardEquipment;
 import com.payangar.collegeofwinterhold.entity.wizard.HipSpellbookHolder;
 import io.redspace.ironsspellbooks.api.registry.SchoolRegistry;
@@ -29,9 +30,11 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.MobSpawnType;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.SpawnGroupData;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.animal.IronGolem;
 import net.minecraft.world.entity.ai.goal.FloatGoal;
 import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
@@ -49,7 +52,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
-public class LightningApprenticeEntity extends NeutralWizard implements HipSpellbookHolder {
+public class LightningApprenticeEntity extends NeutralWizard implements HipSpellbookHolder, CollegeWizard {
     private static final EntityDataAccessor<ItemStack> HIP_SPELLBOOK =
             SynchedEntityData.defineId(LightningApprenticeEntity.class, EntityDataSerializers.ITEM_STACK);
 
@@ -166,6 +169,13 @@ public class LightningApprenticeEntity extends NeutralWizard implements HipSpell
     @Override
     public ItemStack getHipSpellbook() {
         return this.entityData.get(HIP_SPELLBOOK);
+    }
+
+    @Override
+    public boolean isAlliedTo(Entity entity) {
+        if (entity instanceof CollegeWizard) return true;
+        if (entity instanceof IronGolem) return true;
+        return super.isAlliedTo(entity);
     }
 
     @Override

@@ -51,7 +51,9 @@ import net.minecraft.world.level.ServerLevelAccessor;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 public abstract class AbstractCollegeWizardEntity extends NeutralWizard
@@ -63,6 +65,15 @@ public abstract class AbstractCollegeWizardEntity extends NeutralWizard
     private CollegeWizardAttackGoal attackGoal;
     private WizardPreCombatBuffGoal preCombatBuffGoal;
     private final List<RolledSpell> knownSpells = new ArrayList<>();
+
+    /**
+     * Per-buff cooldown map. Key = spell id, value = absolute game tick at which
+     * the buff becomes castable again. Used by {@link WizardPreCombatBuffGoal} to
+     * avoid re-casting summon/buff spells across consecutive combats — Iron's own
+     * recast and cooldown systems are player-only (see {@code MagicData.getPlayerRecasts})
+     * so we mirror the spell's configured cooldown ourselves.
+     */
+    private final Map<String, Long> buffCooldowns = new HashMap<>();
 
     @Nullable
     private String lastCastSpellId;
@@ -175,6 +186,15 @@ public abstract class AbstractCollegeWizardEntity extends NeutralWizard
         return this.entityData.get(HIP_SPELLBOOK);
     }
 
+    public boolean isBuffOnCooldown(String spellId) {
+        Long ready = buffCooldowns.get(spellId);
+        return ready != null && this.level().getGameTime() < ready;
+    }
+
+    public void recordBuffCast(String spellId, int cooldownTicks) {
+        buffCooldowns.put(spellId, this.level().getGameTime() + Math.max(0, cooldownTicks));
+    }
+
     @Override
     public boolean isAlliedTo(Entity entity) {
         if (entity instanceof CollegeWizard) return true;
@@ -202,6 +222,14 @@ public abstract class AbstractCollegeWizardEntity extends NeutralWizard
             tag.putString("LastCastSpellId", lastCastSpellId);
             tag.putInt("LastCastSpellLevel", lastCastSpellLevel);
         }
+
+        if (!buffCooldowns.isEmpty()) {
+            CompoundTag cooldownsTag = new CompoundTag();
+            for (Map.Entry<String, Long> e : buffCooldowns.entrySet()) {
+                cooldownsTag.putLong(e.getKey(), e.getValue());
+            }
+            tag.put("BuffCooldowns", cooldownsTag);
+        }
     }
 
     @Override
@@ -225,6 +253,14 @@ public abstract class AbstractCollegeWizardEntity extends NeutralWizard
         if (tag.contains("LastCastSpellId", Tag.TAG_STRING)) {
             this.lastCastSpellId = tag.getString("LastCastSpellId");
             this.lastCastSpellLevel = tag.getInt("LastCastSpellLevel");
+        }
+
+        buffCooldowns.clear();
+        if (tag.contains("BuffCooldowns", Tag.TAG_COMPOUND)) {
+            CompoundTag cooldownsTag = tag.getCompound("BuffCooldowns");
+            for (String key : cooldownsTag.getAllKeys()) {
+                buffCooldowns.put(key, cooldownsTag.getLong(key));
+            }
         }
     }
 

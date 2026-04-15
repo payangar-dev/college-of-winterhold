@@ -1,6 +1,8 @@
 package com.payangar.collegeofwinterhold.registry;
 
 import com.payangar.collegeofwinterhold.CollegeOfWinterhold;
+import com.payangar.collegeofwinterhold.entity.vampire.VampireEntity;
+import com.payangar.collegeofwinterhold.entity.vampire.VampireHoundEntity;
 import com.payangar.collegeofwinterhold.entity.wizard.AbstractCollegeWizardEntity;
 import com.payangar.collegeofwinterhold.entity.wizard.core.CollegeSchool;
 import com.payangar.collegeofwinterhold.entity.wizard.core.WizardTier;
@@ -259,6 +261,21 @@ public final class ModEntityTypes {
                     .sized(0.6f, 1.8f)
                     .clientTrackingRange(64)
                     .build(ResourceLocation.fromNamespaceAndPath(CollegeOfWinterhold.MODID, "holy_master").toString()));
+
+    // ── Vampires ─────────────────────────────────────────────────────────────
+    public static final DeferredHolder<EntityType<?>, EntityType<VampireEntity>> VAMPIRE =
+            ENTITIES.register("vampire", () -> EntityType.Builder
+                    .of(VampireEntity::new, MobCategory.MONSTER)
+                    .sized(0.6f, 1.8f)
+                    .clientTrackingRange(64)
+                    .build(ResourceLocation.fromNamespaceAndPath(CollegeOfWinterhold.MODID, "vampire").toString()));
+
+    public static final DeferredHolder<EntityType<?>, EntityType<VampireHoundEntity>> VAMPIRE_HOUND =
+            ENTITIES.register("vampire_hound", () -> EntityType.Builder
+                    .of(VampireHoundEntity::new, MobCategory.MONSTER)
+                    .sized(0.6f, 0.85f)
+                    .clientTrackingRange(48)
+                    .build(ResourceLocation.fromNamespaceAndPath(CollegeOfWinterhold.MODID, "vampire_hound").toString()));
 
     public static void register(IEventBus bus) {
         ENTITIES.register(bus);

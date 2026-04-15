@@ -1,6 +1,9 @@
 package com.payangar.collegeofwinterhold.event;
 
 import com.payangar.collegeofwinterhold.CollegeOfWinterhold;
+import com.payangar.collegeofwinterhold.entity.vampire.VampireEntity;
+import com.payangar.collegeofwinterhold.entity.vampire.VampireHoundEntity;
+import com.payangar.collegeofwinterhold.entity.wizard.AbstractCollegeWizardEntity;
 import com.payangar.collegeofwinterhold.entity.wizard.fire.FireAdeptEntity;
 import com.payangar.collegeofwinterhold.entity.wizard.fire.FireApprenticeEntity;
 import com.payangar.collegeofwinterhold.entity.wizard.fire.FireExpertEntity;
@@ -52,6 +55,23 @@ public final class GameBusEvents {
                     monster, FireExpertEntity.class, true));
             monster.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(
                     monster, FireMasterEntity.class, true));
+            // Vampires + hounds are Enemy-tagged but don't extend Monster, so
+            // vanilla hostiles ignore them by default — same pattern as wizards.
+            // Iron golems already target any Enemy via their stock goal, so no
+            // injection is needed on them specifically.
+            monster.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(
+                    monster, VampireEntity.class, true));
+            monster.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(
+                    monster, VampireHoundEntity.class, true));
+        }
+        // College wizards target Monster.class in their own goal set, but
+        // vampires aren't Monster — inject the two dedicated target goals here
+        // so the wizard package stays free of vampire-side imports.
+        if (event.getEntity() instanceof AbstractCollegeWizardEntity wizard) {
+            wizard.targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(
+                    wizard, VampireEntity.class, true));
+            wizard.targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(
+                    wizard, VampireHoundEntity.class, true));
         }
     }
 

@@ -1,7 +1,9 @@
 package com.payangar.collegeofwinterhold.event;
 
 import com.payangar.collegeofwinterhold.CollegeOfWinterhold;
+import com.payangar.collegeofwinterhold.client.entity.vampire.VampireRenderer;
 import com.payangar.collegeofwinterhold.client.entity.wizard.ender.EnderAdeptRenderer;
+import net.minecraft.client.renderer.entity.WolfRenderer;
 import com.payangar.collegeofwinterhold.client.entity.wizard.ender.EnderApprenticeRenderer;
 import com.payangar.collegeofwinterhold.client.entity.wizard.ender.EnderExpertRenderer;
 import com.payangar.collegeofwinterhold.client.entity.wizard.ender.EnderMasterRenderer;
@@ -72,6 +74,11 @@ public final class ClientModBusEvents {
         event.registerEntityRenderer(ModEntityTypes.HOLY_ADEPT.get(), HolyAdeptRenderer::new);
         event.registerEntityRenderer(ModEntityTypes.HOLY_EXPERT.get(), HolyExpertRenderer::new);
         event.registerEntityRenderer(ModEntityTypes.HOLY_MASTER.get(), HolyMasterRenderer::new);
+        event.registerEntityRenderer(ModEntityTypes.VAMPIRE.get(), VampireRenderer::new);
+        // Vampire hound extends vanilla Wolf, so the vanilla WolfRenderer handles
+        // it out of the box — its angry-texture branch fires because the hound's
+        // isAngry() override returns true permanently.
+        event.registerEntityRenderer(ModEntityTypes.VAMPIRE_HOUND.get(), WolfRenderer::new);
     }
 
     private ClientModBusEvents() {}

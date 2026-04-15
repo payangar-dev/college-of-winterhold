@@ -1,7 +1,7 @@
 package com.payangar.collegeofwinterhold.entity.ai;
 
-import com.payangar.collegeofwinterhold.entity.wizard.AbstractCollegeWizardEntity;
 import io.redspace.ironsspellbooks.api.spells.AbstractSpell;
+import io.redspace.ironsspellbooks.entity.mobs.abstract_spell_casting_mob.AbstractSpellCastingMob;
 import net.minecraft.world.entity.ai.goal.Goal;
 
 import java.util.ArrayList;
@@ -19,9 +19,9 @@ import java.util.List;
  * or fire on nothing while patrolling (also wrong, looks weird).
  *
  * <p>Each buff respects a per-spell cooldown stored on the owning
- * {@link AbstractCollegeWizardEntity} and seeded from the spell's own
+ * {@link BuffCooldownHolder} and seeded from the spell's own
  * {@link AbstractSpell#getSpellCooldown()} — the same value Iron's uses to gate
- * player re-casts. This prevents a wizard from re-summoning the same companion
+ * player re-casts. This prevents a caster from re-summoning the same companion
  * or refreshing the same buff on every successive combat, which was the source
  * of companion accumulation before Iron's recast system — disabled for mobs in
  * {@code MagicData.getPlayerRecasts} — failed to stop the duplication.
@@ -35,12 +35,20 @@ import java.util.List;
 public class WizardPreCombatBuffGoal extends Goal {
     private static final int CAST_GAP_TICKS = 20;
 
-    private final AbstractCollegeWizardEntity mob;
+    private final AbstractSpellCastingMob mob;
+    private final BuffCooldownHolder cooldowns;
     private final List<RolledSpell> buffs = new ArrayList<>();
     private int castDelay = 0;
 
-    public WizardPreCombatBuffGoal(AbstractCollegeWizardEntity mob) {
-        this.mob = mob;
+    /**
+     * Takes a single owner implementing both the Iron's spell-casting contract
+     * and our cooldown-holder contract. Callers pass {@code this} from inside an
+     * entity that extends {@code AbstractSpellCastingMob} and implements
+     * {@code BuffCooldownHolder}.
+     */
+    public <T extends AbstractSpellCastingMob & BuffCooldownHolder> WizardPreCombatBuffGoal(T owner) {
+        this.mob = owner;
+        this.cooldowns = owner;
         this.setFlags(EnumSet.of(Flag.LOOK, Flag.TARGET));
     }
 
@@ -83,9 +91,9 @@ public class WizardPreCombatBuffGoal extends Goal {
 
         for (RolledSpell rs : buffs) {
             AbstractSpell spell = rs.spell();
-            if (mob.isBuffOnCooldown(spell.getSpellId())) continue;
+            if (cooldowns.isBuffOnCooldown(spell.getSpellId())) continue;
             mob.initiateCastSpell(spell, rs.level());
-            mob.recordBuffCast(spell.getSpellId(), spell.getSpellCooldown());
+            cooldowns.recordBuffCast(spell.getSpellId(), spell.getSpellCooldown());
             castDelay = CAST_GAP_TICKS + spell.getCastTime(rs.level());
             return;
         }
@@ -98,7 +106,7 @@ public class WizardPreCombatBuffGoal extends Goal {
 
     private boolean hasCastableBuff() {
         for (RolledSpell rs : buffs) {
-            if (!mob.isBuffOnCooldown(rs.spell().getSpellId())) return true;
+            if (!cooldowns.isBuffOnCooldown(rs.spell().getSpellId())) return true;
         }
         return false;
     }

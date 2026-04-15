@@ -222,6 +222,21 @@ public final class ModItems {
                     0xFFFBDE,
                     new Item.Properties().stacksTo(64)));
 
+    // ── Vampires ─────────────────────────────────────────────────────────────
+    public static final DeferredItem<Item> VAMPIRE_SPAWN_EGG =
+            ITEMS.register("vampire_spawn_egg", () -> new DeferredSpawnEggItem(
+                    ModEntityTypes.VAMPIRE,
+                    0x1A0308,
+                    0x8B0000,
+                    new Item.Properties().stacksTo(64)));
+
+    public static final DeferredItem<Item> VAMPIRE_HOUND_SPAWN_EGG =
+            ITEMS.register("vampire_hound_spawn_egg", () -> new DeferredSpawnEggItem(
+                    ModEntityTypes.VAMPIRE_HOUND,
+                    0x0A0A0A,
+                    0x8B0000,
+                    new Item.Properties().stacksTo(64)));
+
     public static void register(IEventBus bus) {
         ITEMS.register(bus);
     }

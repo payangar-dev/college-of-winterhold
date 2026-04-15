@@ -48,6 +48,8 @@ public final class ModCreativeTabs {
                         output.accept(ModItems.HOLY_ADEPT_SPAWN_EGG.get());
                         output.accept(ModItems.HOLY_EXPERT_SPAWN_EGG.get());
                         output.accept(ModItems.HOLY_MASTER_SPAWN_EGG.get());
+                        output.accept(ModItems.VAMPIRE_SPAWN_EGG.get());
+                        output.accept(ModItems.VAMPIRE_HOUND_SPAWN_EGG.get());
                     })
                     .build());
 

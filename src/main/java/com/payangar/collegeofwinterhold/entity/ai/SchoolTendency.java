@@ -48,4 +48,12 @@ public record SchoolTendency(
     public static final SchoolTendency NATURE = NEUTRAL;
 
     public static final SchoolTendency ICE = NEUTRAL;
+
+    /**
+     * Tactical mid-range caster — slightly aggressive, mild support bias for
+     * self-buffs (Heartstop, Raise Dead). Used by hostile blood-mages like the
+     * Vampire entity.
+     */
+    public static final SchoolTendency BLOOD =
+            new SchoolTendency(1.1f, 1.0f, 1.0f, 1.2f, 18f, true);
 }

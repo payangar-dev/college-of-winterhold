@@ -1,5 +1,6 @@
 package com.payangar.collegeofwinterhold.entity.wizard;
 
+import com.payangar.collegeofwinterhold.entity.ai.BuffCooldownHolder;
 import com.payangar.collegeofwinterhold.entity.ai.CollegeSpellPools;
 import com.payangar.collegeofwinterhold.entity.ai.CollegeWizardAttackGoal;
 import com.payangar.collegeofwinterhold.entity.ai.RolledSpell;
@@ -57,7 +58,7 @@ import java.util.Map;
 import java.util.Random;
 
 public abstract class AbstractCollegeWizardEntity extends NeutralWizard
-        implements HipSpellbookHolder, CollegeWizard {
+        implements HipSpellbookHolder, CollegeWizard, BuffCooldownHolder {
 
     private static final EntityDataAccessor<ItemStack> HIP_SPELLBOOK =
             SynchedEntityData.defineId(AbstractCollegeWizardEntity.class, EntityDataSerializers.ITEM_STACK);
@@ -186,11 +187,13 @@ public abstract class AbstractCollegeWizardEntity extends NeutralWizard
         return this.entityData.get(HIP_SPELLBOOK);
     }
 
+    @Override
     public boolean isBuffOnCooldown(String spellId) {
         Long ready = buffCooldowns.get(spellId);
         return ready != null && this.level().getGameTime() < ready;
     }
 
+    @Override
     public void recordBuffCast(String spellId, int cooldownTicks) {
         buffCooldowns.put(spellId, this.level().getGameTime() + Math.max(0, cooldownTicks));
     }

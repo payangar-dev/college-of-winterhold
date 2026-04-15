@@ -2,6 +2,8 @@
 
 Minecraft mod that adds wizard entities organised into elemental schools, built on top of **Iron's Spells 'n Spellbooks** as a hard dependency. Five tiers of power (Novice → Master), cross-school spellcasting starting at Adept. Full design spec: auto-memory `project_wizard_design.md`.
 
+The mod also adds **hostile blood-mage enemies**: vampires (single-type entity with four spawn variants driven by the carried spellbook) and their vampire-hound companions. Vampires use Iron's Blood school — explicitly rejected by the college. Full design spec: auto-memory `project_vampire_design.md`.
+
 ## Stack
 - Minecraft 1.21.1 · NeoForge 21.1.226 · Java 21
 - ModDevGradle 2.0.141 · Mojmap + Parchment 2024.11.17
@@ -38,6 +40,11 @@ Minecraft mod that adds wizard entities organised into elemental schools, built 
 - Adding a new tier = add a value to `WizardTier` (stats, counts, rarities, book slots, xpReward, spellbook item, armor dispatch).
 - Adding a new school = add a value to `CollegeSchool` (Iron's `SchoolType` supplier, `SchoolTendency`, `SchoolArmorSet`).
 - `WizardTier` / `CollegeSchool` live under `entity.wizard.core`. `AbstractCollegeWizardEntity` lives under `entity.wizard`.
+- **Hostile spell casters** (non-college, e.g. vampires): extend `AbstractSpellCastingMob` directly, implement `Enemy` + `HipSpellbookHolder` + `BuffCooldownHolder`. Do NOT extend `NeutralWizard` — Iron's neutral layer adds persistent-anger + friendly-until-attacked logic we don't want. `CollegeWizardAttackGoal` and `WizardPreCombatBuffGoal` are caster-agnostic and work on any such entity (the pre-combat goal was generalized via the `BuffCooldownHolder` interface on 2026-04-15 when vampires were added).
+- Vampire entity: single class `entity.vampire.VampireEntity` + `VampireVariant` enum under `entity.vampire.core` driving HP, spell count, level range, rarity cap, armor piece count, spellbook item, ink tier. Variant rolled at `finalizeSpawn`, stored in both a field and a synced EntityData ordinal. Full spec in `project_vampire_design.md`.
+- Vampire hound: `entity.vampire.VampireHoundEntity extends Wolf` (re-uses vanilla `WolfRenderer` + angry-wolf texture for free). `isAngry() → true` permanently, variant forced to `WolfVariants.BLACK` in `finalizeSpawn`, tame/breed/food all neutered. Master UUID stored in synced EntityData + NBT, nested `FollowMasterGoal` + `CopyMasterTargetGoal`. Stays feral when the master dies (does not despawn).
+- `BloodSpellPools` (under `entity.ai`) is the blood-school twin of `CollegeSpellPools`. Same filters (classification + rarity cap), but restricted to `SchoolRegistry.BLOOD`. `Sacrifice` is intentionally absent from the classification registry — it requires friendly-target data the mob AI can't supply.
+- Data-pack tag `data/minecraft/tags/entity_type/inverted_healing_and_harm.json` marks the vampire as healing-inverted (potions of healing damage, potions of harming heal — vanilla undead behavior via `EntityTypeTags.INVERTED_HEALING_AND_HARM`). Keep entries in this tag in sync when new undead enemies are added.
 
 ## Git & CI
 - **One branch per MC version.** Default branch: `1.21.1`. Never mix versions in one branch.

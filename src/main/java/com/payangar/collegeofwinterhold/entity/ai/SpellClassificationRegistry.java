@@ -101,6 +101,18 @@ public final class SpellClassificationRegistry {
         put("irons_spellbooks:summon_swords",    SELF,   BUFF);
         put("irons_spellbooks:evasion",          SELF,   BUFF);
         put("irons_spellbooks:black_hole",       AOE,    ATTACK_DISTANCE);
+
+        // ── Blood ─────────────────────────────────────────────────────────────
+        // Excluded: sacrifice (requires friendly-target data the mob AI cannot supply)
+        put("irons_spellbooks:acupuncture",      TARGET, ATTACK_DISTANCE);
+        put("irons_spellbooks:blood_needles",    AOE,    ATTACK_DISTANCE);
+        put("irons_spellbooks:blood_slash",      TARGET, ATTACK_DISTANCE);
+        put("irons_spellbooks:blood_step",       TARGET, ATTACK_DISTANCE, MOVEMENT);
+        put("irons_spellbooks:devour",           TARGET, ATTACK_DISTANCE);
+        put("irons_spellbooks:heartstop",        SELF,   BUFF);
+        put("irons_spellbooks:raise_dead",       SELF,   BUFF);
+        put("irons_spellbooks:ray_of_siphoning", TARGET, ATTACK_DISTANCE);
+        put("irons_spellbooks:wither_skull",     TARGET, ATTACK_DISTANCE);
     }
 
     private static void put(String id, SpellTargeting targeting, SpellCategory... categories) {

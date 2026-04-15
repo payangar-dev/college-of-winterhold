@@ -1,6 +1,8 @@
 package com.payangar.collegeofwinterhold.event;
 
 import com.payangar.collegeofwinterhold.CollegeOfWinterhold;
+import com.payangar.collegeofwinterhold.entity.vampire.VampireEntity;
+import com.payangar.collegeofwinterhold.entity.vampire.VampireHoundEntity;
 import com.payangar.collegeofwinterhold.entity.wizard.ender.EnderAdeptEntity;
 import com.payangar.collegeofwinterhold.entity.wizard.ender.EnderApprenticeEntity;
 import com.payangar.collegeofwinterhold.entity.wizard.ender.EnderExpertEntity;
@@ -71,6 +73,8 @@ public final class ModBusEvents {
         event.put(ModEntityTypes.HOLY_ADEPT.get(), HolyAdeptEntity.prepareAttributes().build());
         event.put(ModEntityTypes.HOLY_EXPERT.get(), HolyExpertEntity.prepareAttributes().build());
         event.put(ModEntityTypes.HOLY_MASTER.get(), HolyMasterEntity.prepareAttributes().build());
+        event.put(ModEntityTypes.VAMPIRE.get(), VampireEntity.prepareAttributes().build());
+        event.put(ModEntityTypes.VAMPIRE_HOUND.get(), VampireHoundEntity.prepareAttributes().build());
     }
 
     private ModBusEvents() {}

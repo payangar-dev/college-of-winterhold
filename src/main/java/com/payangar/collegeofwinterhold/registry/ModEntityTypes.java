@@ -1,6 +1,9 @@
 package com.payangar.collegeofwinterhold.registry;
 
 import com.payangar.collegeofwinterhold.CollegeOfWinterhold;
+import com.payangar.collegeofwinterhold.entity.wizard.AbstractCollegeWizardEntity;
+import com.payangar.collegeofwinterhold.entity.wizard.core.CollegeSchool;
+import com.payangar.collegeofwinterhold.entity.wizard.core.WizardTier;
 import com.payangar.collegeofwinterhold.entity.wizard.ender.EnderAdeptEntity;
 import com.payangar.collegeofwinterhold.entity.wizard.ender.EnderApprenticeEntity;
 import com.payangar.collegeofwinterhold.entity.wizard.ender.EnderExpertEntity;
@@ -11,6 +14,11 @@ import com.payangar.collegeofwinterhold.entity.wizard.fire.FireApprenticeEntity;
 import com.payangar.collegeofwinterhold.entity.wizard.fire.FireExpertEntity;
 import com.payangar.collegeofwinterhold.entity.wizard.fire.FireMasterEntity;
 import com.payangar.collegeofwinterhold.entity.wizard.fire.FireNoviceEntity;
+import com.payangar.collegeofwinterhold.entity.wizard.holy.HolyAdeptEntity;
+import com.payangar.collegeofwinterhold.entity.wizard.holy.HolyApprenticeEntity;
+import com.payangar.collegeofwinterhold.entity.wizard.holy.HolyExpertEntity;
+import com.payangar.collegeofwinterhold.entity.wizard.holy.HolyMasterEntity;
+import com.payangar.collegeofwinterhold.entity.wizard.holy.HolyNoviceEntity;
 import com.payangar.collegeofwinterhold.entity.wizard.ice.IceAdeptEntity;
 import com.payangar.collegeofwinterhold.entity.wizard.ice.IceApprenticeEntity;
 import com.payangar.collegeofwinterhold.entity.wizard.ice.IceExpertEntity;
@@ -33,6 +41,10 @@ import net.minecraft.world.entity.MobCategory;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
+
+import javax.annotation.Nullable;
+import java.util.EnumMap;
+import java.util.Map;
 
 public final class ModEntityTypes {
     public static final DeferredRegister<EntityType<?>> ENTITIES =
@@ -213,8 +225,99 @@ public final class ModEntityTypes {
                     .clientTrackingRange(64)
                     .build(ResourceLocation.fromNamespaceAndPath(CollegeOfWinterhold.MODID, "nature_master").toString()));
 
+    public static final DeferredHolder<EntityType<?>, EntityType<HolyNoviceEntity>> HOLY_NOVICE =
+            ENTITIES.register("holy_novice", () -> EntityType.Builder
+                    .of(HolyNoviceEntity::new, MobCategory.MONSTER)
+                    .sized(0.6f, 1.8f)
+                    .clientTrackingRange(64)
+                    .build(ResourceLocation.fromNamespaceAndPath(CollegeOfWinterhold.MODID, "holy_novice").toString()));
+
+    public static final DeferredHolder<EntityType<?>, EntityType<HolyApprenticeEntity>> HOLY_APPRENTICE =
+            ENTITIES.register("holy_apprentice", () -> EntityType.Builder
+                    .of(HolyApprenticeEntity::new, MobCategory.MONSTER)
+                    .sized(0.6f, 1.8f)
+                    .clientTrackingRange(64)
+                    .build(ResourceLocation.fromNamespaceAndPath(CollegeOfWinterhold.MODID, "holy_apprentice").toString()));
+
+    public static final DeferredHolder<EntityType<?>, EntityType<HolyAdeptEntity>> HOLY_ADEPT =
+            ENTITIES.register("holy_adept", () -> EntityType.Builder
+                    .of(HolyAdeptEntity::new, MobCategory.MONSTER)
+                    .sized(0.6f, 1.8f)
+                    .clientTrackingRange(64)
+                    .build(ResourceLocation.fromNamespaceAndPath(CollegeOfWinterhold.MODID, "holy_adept").toString()));
+
+    public static final DeferredHolder<EntityType<?>, EntityType<HolyExpertEntity>> HOLY_EXPERT =
+            ENTITIES.register("holy_expert", () -> EntityType.Builder
+                    .of(HolyExpertEntity::new, MobCategory.MONSTER)
+                    .sized(0.6f, 1.8f)
+                    .clientTrackingRange(64)
+                    .build(ResourceLocation.fromNamespaceAndPath(CollegeOfWinterhold.MODID, "holy_expert").toString()));
+
+    public static final DeferredHolder<EntityType<?>, EntityType<HolyMasterEntity>> HOLY_MASTER =
+            ENTITIES.register("holy_master", () -> EntityType.Builder
+                    .of(HolyMasterEntity::new, MobCategory.MONSTER)
+                    .sized(0.6f, 1.8f)
+                    .clientTrackingRange(64)
+                    .build(ResourceLocation.fromNamespaceAndPath(CollegeOfWinterhold.MODID, "holy_master").toString()));
+
     public static void register(IEventBus bus) {
         ENTITIES.register(bus);
+    }
+
+    /**
+     * (school, tier) → concrete wizard entity type lookup, used by the village
+     * wizard spawner. Built lazily on first call because {@link DeferredHolder}
+     * entries only resolve after the registry freeze; an eager static block
+     * would give {@code null} suppliers. Returns {@code null} for combinations
+     * that are not registered yet.
+     */
+    private static volatile Map<CollegeSchool, EnumMap<WizardTier, DeferredHolder<EntityType<?>, ? extends EntityType<? extends AbstractCollegeWizardEntity>>>> WIZARD_LOOKUP;
+
+    @Nullable
+    public static EntityType<? extends AbstractCollegeWizardEntity> wizardFor(CollegeSchool school, WizardTier tier) {
+        Map<CollegeSchool, EnumMap<WizardTier, DeferredHolder<EntityType<?>, ? extends EntityType<? extends AbstractCollegeWizardEntity>>>> lookup = WIZARD_LOOKUP;
+        if (lookup == null) {
+            synchronized (ModEntityTypes.class) {
+                lookup = WIZARD_LOOKUP;
+                if (lookup == null) {
+                    lookup = buildWizardLookup();
+                    WIZARD_LOOKUP = lookup;
+                }
+            }
+        }
+        EnumMap<WizardTier, DeferredHolder<EntityType<?>, ? extends EntityType<? extends AbstractCollegeWizardEntity>>> perSchool = lookup.get(school);
+        if (perSchool == null) return null;
+        DeferredHolder<EntityType<?>, ? extends EntityType<? extends AbstractCollegeWizardEntity>> holder = perSchool.get(tier);
+        if (holder == null || !holder.isBound()) return null;
+        return holder.get();
+    }
+
+    private static Map<CollegeSchool, EnumMap<WizardTier, DeferredHolder<EntityType<?>, ? extends EntityType<? extends AbstractCollegeWizardEntity>>>> buildWizardLookup() {
+        EnumMap<CollegeSchool, EnumMap<WizardTier, DeferredHolder<EntityType<?>, ? extends EntityType<? extends AbstractCollegeWizardEntity>>>> map = new EnumMap<>(CollegeSchool.class);
+
+        map.put(CollegeSchool.LIGHTNING, tierMap(LIGHTNING_NOVICE, LIGHTNING_APPRENTICE, LIGHTNING_ADEPT, LIGHTNING_EXPERT, LIGHTNING_MASTER));
+        map.put(CollegeSchool.FIRE,      tierMap(FIRE_NOVICE,      FIRE_APPRENTICE,      FIRE_ADEPT,      FIRE_EXPERT,      FIRE_MASTER));
+        map.put(CollegeSchool.ICE,       tierMap(ICE_NOVICE,       ICE_APPRENTICE,       ICE_ADEPT,       ICE_EXPERT,       ICE_MASTER));
+        map.put(CollegeSchool.ENDER,     tierMap(ENDER_NOVICE,     ENDER_APPRENTICE,     ENDER_ADEPT,     ENDER_EXPERT,     ENDER_MASTER));
+        map.put(CollegeSchool.NATURE,    tierMap(NATURE_NOVICE,    NATURE_APPRENTICE,    NATURE_ADEPT,    NATURE_EXPERT,    NATURE_MASTER));
+        map.put(CollegeSchool.HOLY,      tierMap(HOLY_NOVICE,      HOLY_APPRENTICE,      HOLY_ADEPT,      HOLY_EXPERT,      HOLY_MASTER));
+
+        return map;
+    }
+
+    private static EnumMap<WizardTier, DeferredHolder<EntityType<?>, ? extends EntityType<? extends AbstractCollegeWizardEntity>>> tierMap(
+            DeferredHolder<EntityType<?>, ? extends EntityType<? extends AbstractCollegeWizardEntity>> novice,
+            DeferredHolder<EntityType<?>, ? extends EntityType<? extends AbstractCollegeWizardEntity>> apprentice,
+            DeferredHolder<EntityType<?>, ? extends EntityType<? extends AbstractCollegeWizardEntity>> adept,
+            DeferredHolder<EntityType<?>, ? extends EntityType<? extends AbstractCollegeWizardEntity>> expert,
+            DeferredHolder<EntityType<?>, ? extends EntityType<? extends AbstractCollegeWizardEntity>> master) {
+        EnumMap<WizardTier, DeferredHolder<EntityType<?>, ? extends EntityType<? extends AbstractCollegeWizardEntity>>> m = new EnumMap<>(WizardTier.class);
+        m.put(WizardTier.NOVICE, novice);
+        m.put(WizardTier.APPRENTICE, apprentice);
+        m.put(WizardTier.ADEPT, adept);
+        m.put(WizardTier.EXPERT, expert);
+        m.put(WizardTier.MASTER, master);
+        return m;
     }
 
     private ModEntityTypes() {}

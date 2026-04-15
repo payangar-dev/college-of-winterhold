@@ -108,4 +108,17 @@ public enum WizardTier {
             case MASTER     -> CollegeWizardEquipment.applyMasterArmor(mob, rng, schoolSet);
         }
     }
+
+    /**
+     * Rolls a tier in the Adept → Master range according to the village spawn
+     * distribution : 70% Adept, 25% Expert, 5% Master. Used by the village
+     * wizard spawner so Novice & Apprentice stay reserved for the future
+     * custom "College of Winterhold" school structure.
+     */
+    public static WizardTier rollAdeptPlus(RandomSource rng) {
+        float r = rng.nextFloat();
+        if (r < 0.70f) return ADEPT;
+        if (r < 0.95f) return EXPERT;
+        return MASTER;
+    }
 }

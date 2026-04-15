@@ -187,6 +187,41 @@ public final class ModItems {
                     0x8BC34A,
                     new Item.Properties().stacksTo(64)));
 
+    public static final DeferredItem<Item> HOLY_NOVICE_SPAWN_EGG =
+            ITEMS.register("holy_novice_spawn_egg", () -> new DeferredSpawnEggItem(
+                    ModEntityTypes.HOLY_NOVICE,
+                    0xEFD076,
+                    0xFFFBDE,
+                    new Item.Properties().stacksTo(64)));
+
+    public static final DeferredItem<Item> HOLY_APPRENTICE_SPAWN_EGG =
+            ITEMS.register("holy_apprentice_spawn_egg", () -> new DeferredSpawnEggItem(
+                    ModEntityTypes.HOLY_APPRENTICE,
+                    0xEFD076,
+                    0xFFFBDE,
+                    new Item.Properties().stacksTo(64)));
+
+    public static final DeferredItem<Item> HOLY_ADEPT_SPAWN_EGG =
+            ITEMS.register("holy_adept_spawn_egg", () -> new DeferredSpawnEggItem(
+                    ModEntityTypes.HOLY_ADEPT,
+                    0xEFD076,
+                    0xFFFBDE,
+                    new Item.Properties().stacksTo(64)));
+
+    public static final DeferredItem<Item> HOLY_EXPERT_SPAWN_EGG =
+            ITEMS.register("holy_expert_spawn_egg", () -> new DeferredSpawnEggItem(
+                    ModEntityTypes.HOLY_EXPERT,
+                    0xEFD076,
+                    0xFFFBDE,
+                    new Item.Properties().stacksTo(64)));
+
+    public static final DeferredItem<Item> HOLY_MASTER_SPAWN_EGG =
+            ITEMS.register("holy_master_spawn_egg", () -> new DeferredSpawnEggItem(
+                    ModEntityTypes.HOLY_MASTER,
+                    0xEFD076,
+                    0xFFFBDE,
+                    new Item.Properties().stacksTo(64)));
+
     public static void register(IEventBus bus) {
         ITEMS.register(bus);
     }

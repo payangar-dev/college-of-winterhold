@@ -43,6 +43,11 @@ public final class ModCreativeTabs {
                         output.accept(ModItems.NATURE_ADEPT_SPAWN_EGG.get());
                         output.accept(ModItems.NATURE_EXPERT_SPAWN_EGG.get());
                         output.accept(ModItems.NATURE_MASTER_SPAWN_EGG.get());
+                        output.accept(ModItems.HOLY_NOVICE_SPAWN_EGG.get());
+                        output.accept(ModItems.HOLY_APPRENTICE_SPAWN_EGG.get());
+                        output.accept(ModItems.HOLY_ADEPT_SPAWN_EGG.get());
+                        output.accept(ModItems.HOLY_EXPERT_SPAWN_EGG.get());
+                        output.accept(ModItems.HOLY_MASTER_SPAWN_EGG.get());
                     })
                     .build());
 

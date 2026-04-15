@@ -26,6 +26,11 @@
   "entity.college_of_winterhold.nature_adept": "Nature Adept",
   "entity.college_of_winterhold.nature_expert": "Nature Expert",
   "entity.college_of_winterhold.nature_master": "Nature Master",
+  "entity.college_of_winterhold.holy_novice": "Holy Novice",
+  "entity.college_of_winterhold.holy_apprentice": "Holy Apprentice",
+  "entity.college_of_winterhold.holy_adept": "Holy Adept",
+  "entity.college_of_winterhold.holy_expert": "Holy Expert",
+  "entity.college_of_winterhold.holy_master": "Holy Master",
   "item.college_of_winterhold.lightning_novice_spawn_egg": "Lightning Novice Spawn Egg",
   "item.college_of_winterhold.lightning_apprentice_spawn_egg": "Lightning Apprentice Spawn Egg",
   "item.college_of_winterhold.lightning_adept_spawn_egg": "Lightning Adept Spawn Egg",
@@ -50,5 +55,10 @@
   "item.college_of_winterhold.nature_apprentice_spawn_egg": "Nature Apprentice Spawn Egg",
   "item.college_of_winterhold.nature_adept_spawn_egg": "Nature Adept Spawn Egg",
   "item.college_of_winterhold.nature_expert_spawn_egg": "Nature Expert Spawn Egg",
-  "item.college_of_winterhold.nature_master_spawn_egg": "Nature Master Spawn Egg"
+  "item.college_of_winterhold.nature_master_spawn_egg": "Nature Master Spawn Egg",
+  "item.college_of_winterhold.holy_novice_spawn_egg": "Holy Novice Spawn Egg",
+  "item.college_of_winterhold.holy_apprentice_spawn_egg": "Holy Apprentice Spawn Egg",
+  "item.college_of_winterhold.holy_adept_spawn_egg": "Holy Adept Spawn Egg",
+  "item.college_of_winterhold.holy_expert_spawn_egg": "Holy Expert Spawn Egg",
+  "item.college_of_winterhold.holy_master_spawn_egg": "Holy Master Spawn Egg"
 }

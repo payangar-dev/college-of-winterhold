@@ -5,6 +5,8 @@ import com.payangar.collegeofwinterhold.entity.wizard.CollegeWizardEquipment.Sch
 import io.redspace.ironsspellbooks.api.registry.SchoolRegistry;
 import io.redspace.ironsspellbooks.api.spells.SchoolType;
 import io.redspace.ironsspellbooks.registries.ItemRegistry;
+import net.minecraft.core.Holder;
+import net.minecraft.world.level.biome.Biome;
 
 import java.util.function.Supplier;
 
@@ -48,7 +50,15 @@ public enum CollegeSchool {
                     ItemRegistry.PLAGUED_HELMET,
                     ItemRegistry.PLAGUED_CHESTPLATE,
                     ItemRegistry.PLAGUED_LEGGINGS,
-                    ItemRegistry.PLAGUED_BOOTS));
+                    ItemRegistry.PLAGUED_BOOTS)),
+    HOLY(
+            SchoolRegistry.HOLY,
+            SchoolTendency.HOLY,
+            new SchoolArmorSet(
+                    ItemRegistry.PRIEST_HELMET,
+                    ItemRegistry.PRIEST_CHESTPLATE,
+                    ItemRegistry.PRIEST_LEGGINGS,
+                    ItemRegistry.PRIEST_BOOTS));
 
     private final Supplier<SchoolType> ironsSchool;
     private final SchoolTendency tendency;
@@ -63,4 +73,20 @@ public enum CollegeSchool {
     public Supplier<SchoolType> ironsSchool() { return ironsSchool; }
     public SchoolTendency tendency()          { return tendency; }
     public SchoolArmorSet armorSet()          { return armorSet; }
+
+    /**
+     * Resolves the school that spawns in a given biome, in priority order :
+     * Nature > Ender > Ice > Fire > Lightning > Holy (fallback). Used at
+     * village-generated wizard spawn time to pick the school from the biome
+     * via custom {@link WizardBiomeTags}. Any biome that matches no tag falls
+     * through to {@link #HOLY}, so this method never returns {@code null}.
+     */
+    public static CollegeSchool forBiome(Holder<Biome> biome) {
+        if (biome.is(WizardBiomeTags.NATURE_WIZARD_BIOMES))    return NATURE;
+        if (biome.is(WizardBiomeTags.ENDER_WIZARD_BIOMES))     return ENDER;
+        if (biome.is(WizardBiomeTags.ICE_WIZARD_BIOMES))       return ICE;
+        if (biome.is(WizardBiomeTags.FIRE_WIZARD_BIOMES))      return FIRE;
+        if (biome.is(WizardBiomeTags.LIGHTNING_WIZARD_BIOMES)) return LIGHTNING;
+        return HOLY;
+    }
 }

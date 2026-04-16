@@ -20,7 +20,10 @@ import com.payangar.collegeofwinterhold.entity.wizard.lightning.LightningNoviceE
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
+import net.minecraft.tags.EntityTypeTags;
+import net.minecraft.world.entity.monster.Creeper;
 import net.minecraft.world.entity.monster.Monster;
+import net.minecraft.world.entity.monster.Spider;
 import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.phys.AABB;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -73,10 +76,19 @@ public final class GameBusEvents {
             // vanilla hostiles ignore them by default — same pattern as wizards.
             // Iron golems already target any Enemy via their stock goal, so no
             // injection is needed on them specifically.
-            monster.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(
-                    monster, VampireEntity.class, true));
-            monster.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(
-                    monster, VampireHoundEntity.class, true));
+            //
+            // Undead mobs treat vampires as kin (both are in the
+            // INVERTED_HEALING_AND_HARM tag), spiders are indifferent, and
+            // creepers only ever target players in vanilla.
+            boolean shouldTargetVampires = !monster.getType().is(EntityTypeTags.UNDEAD)
+                    && !(monster instanceof Spider)
+                    && !(monster instanceof Creeper);
+            if (shouldTargetVampires) {
+                monster.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(
+                        monster, VampireEntity.class, true));
+                monster.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(
+                        monster, VampireHoundEntity.class, true));
+            }
         }
         // College wizards target Monster.class in their own goal set, but
         // vampires aren't Monster — inject the two dedicated target goals here

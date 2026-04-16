@@ -135,9 +135,69 @@ public class VampireHoundEntity extends Wolf implements Enemy {
         return InteractionResult.PASS;
     }
 
+    /**
+     * A hound counts as a coven companion while its master is alive and is
+     * itself a coven member. Orphaned hounds fall back to the classic vanilla
+     * despawn rules, so a master killed in combat eventually lets its hound
+     * despawn normally.
+     */
+    public boolean isCovenHound() {
+        return this.getMaster() instanceof VampireEntity vampire && vampire.isCovenMember();
+    }
+
     @Override
-    public boolean removeWhenFarAway(double distanceToClosestPlayer) {
-        return false;
+    public boolean requiresCustomPersistence() {
+        // Exempt from the vanilla spawn cap while the master is a coven
+        // member. Mirrors VampireEntity.requiresCustomPersistence — the
+        // custom checkDespawn below still runs the distance check.
+        return super.requiresCustomPersistence() || this.isCovenHound();
+    }
+
+    public int getDespawnDistance() {
+        return this.isCovenHound() ? 500 : this.getType().getCategory().getDespawnDistance();
+    }
+
+    public int getNoDespawnDistance() {
+        return this.isCovenHound() ? 128 : this.getType().getCategory().getNoDespawnDistance();
+    }
+
+    @Override
+    public void checkDespawn() {
+        // Mirror of Mob.checkDespawn with overridable distances and no
+        // early-out on requiresCustomPersistence — same pattern as
+        // VampireEntity. See the javadoc there for the full rationale.
+        if (this.level().getDifficulty() == net.minecraft.world.Difficulty.PEACEFUL
+                && this.shouldDespawnInPeaceful()) {
+            this.discard();
+            return;
+        }
+        if (this.isPersistenceRequired()) {
+            this.noActionTime = 0;
+            return;
+        }
+
+        net.minecraft.world.entity.player.Player nearest =
+                this.level().getNearestPlayer(this, -1.0);
+        if (nearest == null) return;
+
+        double distSqr = nearest.distanceToSqr(this);
+        int despawnDist = getDespawnDistance();
+        int despawnDistSqr = despawnDist * despawnDist;
+        if (distSqr > (double) despawnDistSqr && this.removeWhenFarAway(distSqr)) {
+            this.discard();
+            return;
+        }
+
+        int noDespawnDist = getNoDespawnDistance();
+        int noDespawnDistSqr = noDespawnDist * noDespawnDist;
+        if (this.noActionTime > 600
+                && this.random.nextInt(800) == 0
+                && distSqr > (double) noDespawnDistSqr
+                && this.removeWhenFarAway(distSqr)) {
+            this.discard();
+        } else if (distSqr < (double) noDespawnDistSqr) {
+            this.noActionTime = 0;
+        }
     }
 
     public void setMasterUuid(@Nullable UUID uuid) {

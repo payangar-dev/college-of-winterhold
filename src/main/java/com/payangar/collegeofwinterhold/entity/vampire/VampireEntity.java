@@ -4,6 +4,8 @@ import com.payangar.collegeofwinterhold.entity.ai.BloodSpellPools;
 import com.payangar.collegeofwinterhold.entity.ai.BuffCooldownHolder;
 import com.payangar.collegeofwinterhold.entity.ai.CollegeSpellPools;
 import com.payangar.collegeofwinterhold.entity.ai.CollegeWizardAttackGoal;
+import com.payangar.collegeofwinterhold.entity.ai.CopyLeaderTargetGoal;
+import com.payangar.collegeofwinterhold.entity.ai.FollowLeaderGoal;
 import com.payangar.collegeofwinterhold.entity.ai.RolledSpell;
 import com.payangar.collegeofwinterhold.entity.ai.SchoolTendency;
 import com.payangar.collegeofwinterhold.entity.ai.WizardPreCombatBuffGoal;
@@ -20,6 +22,7 @@ import io.redspace.ironsspellbooks.entity.mobs.goals.WizardRecoverGoal;
 import io.redspace.ironsspellbooks.registries.ItemRegistry;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -29,6 +32,7 @@ import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.Difficulty;
 import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
@@ -42,6 +46,8 @@ import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.FloatGoal;
 import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.animal.IronGolem;
@@ -63,7 +69,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Random;
+import java.util.UUID;
 
 /**
  * Hostile blood-mage that inherits Iron's spell-casting framework directly
@@ -89,6 +97,17 @@ public class VampireEntity extends AbstractSpellCastingMob
             SynchedEntityData.defineId(VampireEntity.class, EntityDataSerializers.ITEM_STACK);
     private static final EntityDataAccessor<Integer> VARIANT_ORDINAL =
             SynchedEntityData.defineId(VampireEntity.class, EntityDataSerializers.INT);
+    private static final EntityDataAccessor<Optional<UUID>> LEADER_UUID =
+            SynchedEntityData.defineId(VampireEntity.class, EntityDataSerializers.OPTIONAL_UUID);
+    private static final EntityDataAccessor<Boolean> IS_COVEN_LEADER =
+            SynchedEntityData.defineId(VampireEntity.class, EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Boolean> IS_JAILER =
+            SynchedEntityData.defineId(VampireEntity.class, EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Boolean> FRENZIED =
+            SynchedEntityData.defineId(VampireEntity.class, EntityDataSerializers.BOOLEAN);
+
+    /** Frenzy duration applied to every surviving coven follower when the leader dies. */
+    public static final int FRENZY_DURATION_TICKS = 1200; // 60 s
 
     private CollegeWizardAttackGoal attackGoal;
     private WizardPreCombatBuffGoal preCombatBuffGoal;
@@ -101,6 +120,16 @@ public class VampireEntity extends AbstractSpellCastingMob
 
     /** Resolved from {@link #VARIANT_ORDINAL} — never null after {@code finalizeSpawn}. */
     private VampireVariant variant = VampireVariant.NO_BOOK;
+
+    /**
+     * Optional override consumed once in {@link #finalizeSpawn}. Set by the
+     * coven spawner to force the leader into a high-tier variant instead of
+     * rolling from the default distribution.
+     */
+    @Nullable private VampireVariant forcedVariant;
+
+    /** Server-side frenzy countdown. Not synced — clients only see the boolean flag. */
+    private int frenzyTicksRemaining;
 
     public VampireEntity(EntityType<? extends AbstractSpellCastingMob> type, Level level) {
         super(type, level);
@@ -121,6 +150,10 @@ public class VampireEntity extends AbstractSpellCastingMob
         super.defineSynchedData(builder);
         builder.define(HIP_SPELLBOOK, ItemStack.EMPTY);
         builder.define(VARIANT_ORDINAL, VampireVariant.NO_BOOK.ordinal());
+        builder.define(LEADER_UUID, Optional.empty());
+        builder.define(IS_COVEN_LEADER, false);
+        builder.define(IS_JAILER, false);
+        builder.define(FRENZIED, false);
     }
 
     @Override
@@ -131,26 +164,33 @@ public class VampireEntity extends AbstractSpellCastingMob
         this.attackGoal = new CollegeWizardAttackGoal(this, 1.1f, 40, 80)
                 .setTendency(SchoolTendency.BLOOD);
         this.goalSelector.addGoal(3, this.attackGoal);
-        this.goalSelector.addGoal(4, new PatrolNearLocationGoal(this, 30, 0.75f));
+        // FollowLeaderGoal sits between the attack goal and the patrol wander so
+        // followers regroup with their leader during downtime but never interrupt
+        // a running spell cast. Leaders short-circuit the goal internally.
+        this.goalSelector.addGoal(4, new FollowLeaderGoal(this, 1.0, 3.0f, 8.0f));
+        this.goalSelector.addGoal(5, new PatrolNearLocationGoal(this, 30, 0.75f));
         this.goalSelector.addGoal(8, new LookAtPlayerGoal(this, Player.class, 8.0f));
         this.goalSelector.addGoal(10, new WizardRecoverGoal(this));
 
         this.targetSelector.addGoal(1, new HurtByTargetGoal(this));
-        this.targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(this, Player.class, true));
-        this.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(this, Villager.class, false));
-        this.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(this, IronGolem.class, true));
-        this.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(this, AbstractIllager.class, true));
-        // CollegeWizard is an interface — targeting by interface is allowed via class filter
-        // below in the isHostileTowards override route: we target any LivingEntity that is a
-        // CollegeWizard through a custom predicate on a Mob-class goal.
-        this.targetSelector.addGoal(4, new NearestAttackableTargetGoal<>(
+        // CopyLeaderTargetGoal trumps the standalone target-acquisition goals so
+        // followers focus on whatever the leader is currently attacking. Yields
+        // when the leader is dead/missing — the fallback chain takes over.
+        this.targetSelector.addGoal(2, new CopyLeaderTargetGoal(this));
+        this.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(this, Player.class, true));
+        this.targetSelector.addGoal(4, new NearestAttackableTargetGoal<>(this, Villager.class, false));
+        this.targetSelector.addGoal(4, new NearestAttackableTargetGoal<>(this, IronGolem.class, true));
+        this.targetSelector.addGoal(4, new NearestAttackableTargetGoal<>(this, AbstractIllager.class, true));
+        // CollegeWizard is an interface — targeted via a Mob-class goal + predicate.
+        this.targetSelector.addGoal(5, new NearestAttackableTargetGoal<>(
                 this, Mob.class, 10, true, false, e -> e instanceof CollegeWizard));
     }
 
     @Override
     public SpawnGroupData finalizeSpawn(ServerLevelAccessor level, DifficultyInstance difficulty,
                                         MobSpawnType reason, @Nullable SpawnGroupData spawnData) {
-        VampireVariant rolled = VampireVariant.rollVariant(this.random);
+        VampireVariant rolled = forcedVariant != null ? forcedVariant : VampireVariant.rollVariant(this.random);
+        forcedVariant = null;
         applyVariant(rolled);
         rollLoadout(this.random);
         applyLoadoutToGoal();
@@ -282,6 +322,28 @@ public class VampireEntity extends AbstractSpellCastingMob
         super.aiStep();
     }
 
+    @Override
+    public void tick() {
+        super.tick();
+        if (this.level().isClientSide) {
+            // Crimson spore particles around frenzied vampires — visual tell
+            // that the survivors of a dead leader have gone berserk.
+            if (isFrenzied() && this.tickCount % 4 == 0) {
+                for (int i = 0; i < 3; i++) {
+                    double px = getX() + (random.nextDouble() - 0.5) * getBbWidth();
+                    double py = getY() + random.nextDouble() * getBbHeight();
+                    double pz = getZ() + (random.nextDouble() - 0.5) * getBbWidth();
+                    this.level().addParticle(ParticleTypes.CRIMSON_SPORE, px, py, pz, 0, 0, 0);
+                }
+            }
+        } else if (frenzyTicksRemaining > 0) {
+            frenzyTicksRemaining--;
+            if (frenzyTicksRemaining == 0) {
+                this.entityData.set(FRENZIED, false);
+            }
+        }
+    }
+
     /**
      * Mirrors {@code Mob.isSunBurnTick} but without the helmet exemption — a
      * helmet does not protect a vampire from sunlight by design. Kept private;
@@ -307,6 +369,88 @@ public class VampireEntity extends AbstractSpellCastingMob
         return variant;
     }
 
+    // ────────────────────────────────────────────────────────────────────────
+    // Coven accessors
+
+    /**
+     * Forces the variant to be used on the next {@link #finalizeSpawn} call
+     * instead of rolling from the default distribution. Consumed once.
+     */
+    public void setForcedVariant(@Nullable VampireVariant v) {
+        this.forcedVariant = v;
+    }
+
+    public void setLeaderUuid(@Nullable UUID uuid) {
+        this.entityData.set(LEADER_UUID, Optional.ofNullable(uuid));
+    }
+
+    @Nullable
+    public UUID getLeaderUuid() {
+        return this.entityData.get(LEADER_UUID).orElse(null);
+    }
+
+    /**
+     * Resolves the coven leader in the current level. Returns {@code null} if
+     * this vampire has no leader, the leader is unloaded or dead, or we are
+     * not on a server. Server-side only.
+     */
+    @Nullable
+    public LivingEntity getLeader() {
+        UUID uuid = getLeaderUuid();
+        if (uuid == null) return null;
+        if (!(this.level() instanceof ServerLevel server)) return null;
+        Entity found = server.getEntity(uuid);
+        return (found instanceof LivingEntity living && living.isAlive()) ? living : null;
+    }
+
+    public boolean isCovenLeader() {
+        return this.entityData.get(IS_COVEN_LEADER);
+    }
+
+    public void setCovenLeader(boolean leader) {
+        this.entityData.set(IS_COVEN_LEADER, leader);
+    }
+
+    /**
+     * A vampire is considered a coven member when it has either been flagged
+     * as the leader of a coven or is wired to a leader UUID as a follower.
+     * Drives mob-cap exemption and the custom despawn distance.
+     */
+    public boolean isCovenMember() {
+        return this.isCovenLeader() || this.getLeaderUuid() != null;
+    }
+
+    public boolean isJailer() {
+        return this.entityData.get(IS_JAILER);
+    }
+
+    public void setJailer(boolean jailer) {
+        this.entityData.set(IS_JAILER, jailer);
+    }
+
+    // ────────────────────────────────────────────────────────────────────────
+    // Frenzy
+
+    public boolean isFrenzied() {
+        return this.entityData.get(FRENZIED);
+    }
+
+    /**
+     * Enters a berserker state for {@code ticks} ticks : applies vanilla
+     * Speed I + Strength I and flips the synced {@code FRENZIED} flag so
+     * clients render the crimson spore particles. Called on every surviving
+     * coven follower when the leader dies.
+     */
+    public void enterFrenzy(int ticks) {
+        this.entityData.set(FRENZIED, true);
+        this.frenzyTicksRemaining = ticks;
+        this.addEffect(new MobEffectInstance(
+                MobEffects.MOVEMENT_SPEED, ticks, 0, false, true));
+        this.addEffect(new MobEffectInstance(
+                MobEffects.DAMAGE_BOOST, ticks, 0, false, true));
+        // TODO : play a custom "coven-rage" sound here once the asset lands.
+    }
+
     @Override
     public boolean isBuffOnCooldown(String spellId) {
         Long ready = buffCooldowns.get(spellId);
@@ -319,14 +463,90 @@ public class VampireEntity extends AbstractSpellCastingMob
     }
 
     @Override
-    public boolean removeWhenFarAway(double distanceToClosestPlayer) {
-        return false;
+    public boolean requiresCustomPersistence() {
+        // Coven members are exempted from the vanilla spawn cap so a dark
+        // forest full of covens doesn't strangle MONSTER spawns elsewhere on
+        // the map. Classic vampires (spawn egg, command) stay in the cap via
+        // the super call.
+        //
+        // Note : the custom checkDespawn override below deliberately skips the
+        // requiresCustomPersistence early-out so coven members still despawn
+        // by distance — here we only decouple mob-cap counting from despawn.
+        return super.requiresCustomPersistence() || this.isCovenMember();
+    }
+
+    /**
+     * Coven members despawn at a much larger distance than vanilla so a
+     * player has to truly leave the area before a cleared coven is eligible
+     * to be re-spawned by {@link com.payangar.collegeofwinterhold.world.VampireCovenSpawner}.
+     */
+    public int getDespawnDistance() {
+        return this.isCovenMember() ? 500 : this.getType().getCategory().getDespawnDistance();
+    }
+
+    public int getNoDespawnDistance() {
+        return this.isCovenMember() ? 128 : this.getType().getCategory().getNoDespawnDistance();
+    }
+
+    @Override
+    public void checkDespawn() {
+        // Mirror of Mob.checkDespawn — identical branching, identical soft/hard
+        // despawn cadence — with two differences :
+        //   1) getDespawnDistance() / getNoDespawnDistance() are instance
+        //      methods so coven members use 500 blocks instead of 128.
+        //   2) the vanilla early-out on requiresCustomPersistence() is skipped
+        //      so coven members (which need the flag for the mob-cap exemption)
+        //      still go through the distance check.
+        if (this.level().getDifficulty() == Difficulty.PEACEFUL && this.shouldDespawnInPeaceful()) {
+            this.discard();
+            return;
+        }
+        if (this.isPersistenceRequired()) {
+            this.noActionTime = 0;
+            return;
+        }
+
+        Player nearest = this.level().getNearestPlayer(this, -1.0);
+        if (nearest == null) return;
+
+        double distSqr = nearest.distanceToSqr(this);
+        int despawnDist = getDespawnDistance();
+        int despawnDistSqr = despawnDist * despawnDist;
+        if (distSqr > (double) despawnDistSqr && this.removeWhenFarAway(distSqr)) {
+            this.discard();
+            return;
+        }
+
+        int noDespawnDist = getNoDespawnDistance();
+        int noDespawnDistSqr = noDespawnDist * noDespawnDist;
+        if (this.noActionTime > 600
+                && this.random.nextInt(800) == 0
+                && distSqr > (double) noDespawnDistSqr
+                && this.removeWhenFarAway(distSqr)) {
+            this.discard();
+        } else if (distSqr < (double) noDespawnDistSqr) {
+            this.noActionTime = 0;
+        }
     }
 
     @Override
     public void addAdditionalSaveData(CompoundTag tag) {
         super.addAdditionalSaveData(tag);
         tag.putInt("Variant", variant.ordinal());
+        UUID leader = getLeaderUuid();
+        if (leader != null) {
+            tag.putUUID("LeaderUUID", leader);
+        }
+        if (isCovenLeader()) {
+            tag.putBoolean("IsCovenLeader", true);
+        }
+        if (isJailer()) {
+            tag.putBoolean("IsJailer", true);
+        }
+        if (frenzyTicksRemaining > 0) {
+            tag.putInt("FrenzyTicks", frenzyTicksRemaining);
+            tag.putBoolean("Frenzied", true);
+        }
 
         ListTag spellsTag = new ListTag();
         for (RolledSpell rolled : knownSpells) {
@@ -366,6 +586,20 @@ public class VampireEntity extends AbstractSpellCastingMob
                 this.entityData.set(VARIANT_ORDINAL, ord);
                 this.xpReward = this.variant.xpReward();
             }
+        }
+
+        if (tag.hasUUID("LeaderUUID")) {
+            setLeaderUuid(tag.getUUID("LeaderUUID"));
+        }
+        if (tag.getBoolean("IsCovenLeader")) {
+            setCovenLeader(true);
+        }
+        if (tag.getBoolean("IsJailer")) {
+            setJailer(true);
+        }
+        if (tag.contains("FrenzyTicks", Tag.TAG_INT)) {
+            this.frenzyTicksRemaining = tag.getInt("FrenzyTicks");
+            this.entityData.set(FRENZIED, tag.getBoolean("Frenzied"));
         }
 
         knownSpells.clear();

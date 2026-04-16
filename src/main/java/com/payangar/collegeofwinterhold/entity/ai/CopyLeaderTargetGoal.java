@@ -1,6 +1,5 @@
 package com.payangar.collegeofwinterhold.entity.ai;
 
-import com.payangar.collegeofwinterhold.entity.vampire.VampireEntity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.goal.Goal;
@@ -13,19 +12,19 @@ import java.util.EnumSet;
  * leader is missing or dead so the follower falls back to its own target
  * goals (HurtByTargetGoal, NearestAttackableTargetGoal, ...).
  */
-public final class CopyLeaderTargetGoal extends Goal {
-    private final VampireEntity follower;
+public final class CopyLeaderTargetGoal<T extends Mob & GroupMember> extends Goal {
+    private final T follower;
     private @Nullable LivingEntity seenTarget;
 
-    public CopyLeaderTargetGoal(VampireEntity follower) {
+    public CopyLeaderTargetGoal(T follower) {
         this.follower = follower;
         this.setFlags(EnumSet.of(Flag.TARGET));
     }
 
     @Override
     public boolean canUse() {
-        if (follower.isCovenLeader()) return false;
-        LivingEntity leader = follower.getLeader();
+        if (follower.isGroupLeader()) return false;
+        LivingEntity leader = follower.getGroupLeader();
         if (!(leader instanceof Mob leaderMob)) return false;
         LivingEntity leaderTarget = leaderMob.getTarget();
         if (leaderTarget == null || !leaderTarget.isAlive()) return false;

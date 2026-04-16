@@ -13,7 +13,7 @@ public final class ModServerConfig {
     private static final ModConfigSpec.Builder BUILDER = new ModConfigSpec.Builder();
 
     // ────────────────────────────────────────────────────────────────────────
-    // Coven spawner
+    // [vampire.coven]
 
     public static final ModConfigSpec.IntValue COVEN_SCAN_INTERVAL_TICKS;
     public static final ModConfigSpec.IntValue COVEN_ATTEMPTS_PER_SCAN;
@@ -22,9 +22,22 @@ public final class ModServerConfig {
     public static final ModConfigSpec.IntValue COVEN_MIN_SPAWN_DISTANCE;
     public static final ModConfigSpec.IntValue COVEN_MAX_SPAWN_DISTANCE;
 
+    // ────────────────────────────────────────────────────────────────────────
+    // [wizard.exploration]
+
+    public static final ModConfigSpec.IntValue EXPLORATION_SCAN_INTERVAL_TICKS;
+    public static final ModConfigSpec.IntValue EXPLORATION_ATTEMPTS_PER_SCAN;
+    public static final ModConfigSpec.DoubleValue EXPLORATION_BASE_SPAWN_CHANCE;
+    public static final ModConfigSpec.DoubleValue EXPLORATION_STRUCTURE_MULTIPLIER;
+    public static final ModConfigSpec.IntValue EXPLORATION_MIN_SPACING_BLOCKS;
+    public static final ModConfigSpec.IntValue EXPLORATION_MIN_SPAWN_DISTANCE;
+    public static final ModConfigSpec.IntValue EXPLORATION_MAX_SPAWN_DISTANCE;
+
     public static final ModConfigSpec SPEC;
 
     static {
+        // ── Vampire ─────────────────────────────────────────────────────────
+        BUILDER.push("vampire");
         BUILDER.push("coven");
 
         COVEN_SCAN_INTERVAL_TICKS = BUILDER
@@ -80,7 +93,69 @@ public final class ModServerConfig {
                 )
                 .defineInRange("maxSpawnDistance", 128, 16, 512);
 
-        BUILDER.pop();
+        BUILDER.pop(); // coven
+        BUILDER.pop(); // vampire
+
+        // ── Wizard ──────────────────────────────────────────────────────────
+        BUILDER.push("wizard");
+        BUILDER.push("exploration");
+
+        EXPLORATION_SCAN_INTERVAL_TICKS = BUILDER
+                .comment(
+                        "How often (in ticks) the exploration spawner runs a scan pass around every player.",
+                        "20 ticks = 1 second. Higher values = rarer spawns.",
+                        "Default: 1200 (60 seconds)."
+                )
+                .defineInRange("scanIntervalTicks", 1200, 20, 72000);
+
+        EXPLORATION_ATTEMPTS_PER_SCAN = BUILDER
+                .comment(
+                        "Number of independent spawn attempts per scan tick per player.",
+                        "Default: 3."
+                )
+                .defineInRange("attemptsPerScan", 3, 1, 50);
+
+        EXPLORATION_BASE_SPAWN_CHANCE = BUILDER
+                .comment(
+                        "Base probability (0.0 - 1.0) that an individual spawn attempt proceeds.",
+                        "This is the chance in open terrain — structures multiply this value by",
+                        "the structureMultiplier below (capped at 1.0).",
+                        "Default: 0.15."
+                )
+                .defineInRange("baseSpawnChance", 0.15, 0.0, 1.0);
+
+        EXPLORATION_STRUCTURE_MULTIPLIER = BUILDER
+                .comment(
+                        "Multiplier applied to baseSpawnChance when the candidate position is",
+                        "inside a structure (village, temple, stronghold, etc.).",
+                        "Effective chance = min(baseSpawnChance * structureMultiplier, 1.0).",
+                        "Default: 3.0."
+                )
+                .defineInRange("structureMultiplier", 3.0, 1.0, 20.0);
+
+        EXPLORATION_MIN_SPACING_BLOCKS = BUILDER
+                .comment(
+                        "Minimum distance (blocks) between two exploration wizard groups.",
+                        "Default: 128."
+                )
+                .defineInRange("minSpacingBlocks", 128, 16, 1000);
+
+        EXPLORATION_MIN_SPAWN_DISTANCE = BUILDER
+                .comment(
+                        "Minimum distance (blocks) from the triggering player.",
+                        "Default: 48."
+                )
+                .defineInRange("minSpawnDistance", 48, 0, 512);
+
+        EXPLORATION_MAX_SPAWN_DISTANCE = BUILDER
+                .comment(
+                        "Maximum distance (blocks) from the triggering player.",
+                        "Default: 128."
+                )
+                .defineInRange("maxSpawnDistance", 128, 16, 512);
+
+        BUILDER.pop(); // exploration
+        BUILDER.pop(); // wizard
 
         SPEC = BUILDER.build();
     }

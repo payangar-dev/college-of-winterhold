@@ -3,6 +3,9 @@ package com.payangar.collegeofwinterhold.entity.wizard;
 import com.payangar.collegeofwinterhold.entity.ai.BuffCooldownHolder;
 import com.payangar.collegeofwinterhold.entity.ai.CollegeSpellPools;
 import com.payangar.collegeofwinterhold.entity.ai.CollegeWizardAttackGoal;
+import com.payangar.collegeofwinterhold.entity.ai.CopyLeaderTargetGoal;
+import com.payangar.collegeofwinterhold.entity.ai.FollowLeaderGoal;
+import com.payangar.collegeofwinterhold.entity.ai.GroupMember;
 import com.payangar.collegeofwinterhold.entity.ai.RolledSpell;
 import com.payangar.collegeofwinterhold.entity.ai.WizardPreCombatBuffGoal;
 import com.payangar.collegeofwinterhold.entity.wizard.core.CollegeSchool;
@@ -55,13 +58,19 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Random;
+import java.util.UUID;
 
 public abstract class AbstractCollegeWizardEntity extends NeutralWizard
-        implements HipSpellbookHolder, CollegeWizard, BuffCooldownHolder {
+        implements HipSpellbookHolder, CollegeWizard, BuffCooldownHolder, GroupMember {
 
     private static final EntityDataAccessor<ItemStack> HIP_SPELLBOOK =
             SynchedEntityData.defineId(AbstractCollegeWizardEntity.class, EntityDataSerializers.ITEM_STACK);
+    private static final EntityDataAccessor<Optional<UUID>> LEADER_UUID =
+            SynchedEntityData.defineId(AbstractCollegeWizardEntity.class, EntityDataSerializers.OPTIONAL_UUID);
+    private static final EntityDataAccessor<Boolean> IS_GROUP_LEADER =
+            SynchedEntityData.defineId(AbstractCollegeWizardEntity.class, EntityDataSerializers.BOOLEAN);
 
     private CollegeWizardAttackGoal attackGoal;
     private WizardPreCombatBuffGoal preCombatBuffGoal;
@@ -101,6 +110,8 @@ public abstract class AbstractCollegeWizardEntity extends NeutralWizard
     protected void defineSynchedData(SynchedEntityData.Builder builder) {
         super.defineSynchedData(builder);
         builder.define(HIP_SPELLBOOK, ItemStack.EMPTY);
+        builder.define(LEADER_UUID, Optional.empty());
+        builder.define(IS_GROUP_LEADER, false);
     }
 
     @Override
@@ -111,13 +122,22 @@ public abstract class AbstractCollegeWizardEntity extends NeutralWizard
         this.attackGoal = new CollegeWizardAttackGoal(this, 1.1f, 40, 80)
                 .setTendency(school().tendency());
         this.goalSelector.addGoal(3, this.attackGoal);
-        this.goalSelector.addGoal(4, new PatrolNearLocationGoal(this, 30, 0.75f));
+        // FollowLeaderGoal sits between attack and patrol so exploration
+        // followers regroup with their leader during downtime but never
+        // interrupt a running spell cast. Non-grouped wizards (village etc.)
+        // short-circuit the goal — isGroupLeader=false + no leader UUID → canUse=false.
+        this.goalSelector.addGoal(4, new FollowLeaderGoal<>(this, 1.0, 3.0f, 8.0f));
+        this.goalSelector.addGoal(5, new PatrolNearLocationGoal(this, 30, 0.75f));
         this.goalSelector.addGoal(8, new LookAtPlayerGoal(this, Player.class, 8.0f));
         this.goalSelector.addGoal(10, new WizardRecoverGoal(this));
 
         this.targetSelector.addGoal(1, new HurtByTargetGoal(this));
-        this.targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(this, Monster.class, 5, true, false, null));
-        this.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(this, Player.class, 10, true, false, this::isHostileTowards));
+        // CopyLeaderTargetGoal trumps standalone target-acquisition so
+        // exploration followers focus on whatever the leader is attacking.
+        // Yields when no leader — the fallback chain takes over.
+        this.targetSelector.addGoal(2, new CopyLeaderTargetGoal<>(this));
+        this.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(this, Monster.class, 5, true, false, null));
+        this.targetSelector.addGoal(4, new NearestAttackableTargetGoal<>(this, Player.class, 10, true, false, this::isHostileTowards));
         this.targetSelector.addGoal(5, new ResetUniversalAngerTargetGoal<>(this, false));
     }
 
@@ -198,9 +218,49 @@ public abstract class AbstractCollegeWizardEntity extends NeutralWizard
         buffCooldowns.put(spellId, this.level().getGameTime() + Math.max(0, cooldownTicks));
     }
 
+    // ────────────────────────────────────────────────────────────────────────
+    // Group leader/follower (exploration parties)
+
+    public void setLeaderUuid(@Nullable UUID uuid) {
+        this.entityData.set(LEADER_UUID, Optional.ofNullable(uuid));
+    }
+
+    @Nullable
+    public UUID getLeaderUuid() {
+        return this.entityData.get(LEADER_UUID).orElse(null);
+    }
+
+    public void setGroupLeader(boolean leader) {
+        this.entityData.set(IS_GROUP_LEADER, leader);
+    }
+
+    @Override
+    public boolean isGroupLeader() {
+        return this.entityData.get(IS_GROUP_LEADER);
+    }
+
+    @Override
+    @Nullable
+    public LivingEntity getGroupLeader() {
+        UUID uuid = getLeaderUuid();
+        if (uuid == null) return null;
+        if (!(this.level() instanceof ServerLevel server)) return null;
+        Entity found = server.getEntity(uuid);
+        return (found instanceof LivingEntity living && living.isAlive()) ? living : null;
+    }
+
+    /**
+     * Whether this wizard belongs to an exploration group (leader or follower).
+     * Exploration-spawned wizards despawn when far from players, unlike village
+     * wizards which are persistent.
+     */
+    public boolean isExplorationGroup() {
+        return isGroupLeader() || getLeaderUuid() != null;
+    }
+
     @Override
     public boolean removeWhenFarAway(double distanceToClosestPlayer) {
-        return false;
+        return isExplorationGroup();
     }
 
     @Override
@@ -213,6 +273,14 @@ public abstract class AbstractCollegeWizardEntity extends NeutralWizard
     @Override
     public void addAdditionalSaveData(CompoundTag tag) {
         super.addAdditionalSaveData(tag);
+        UUID leader = getLeaderUuid();
+        if (leader != null) {
+            tag.putUUID("LeaderUUID", leader);
+        }
+        if (isGroupLeader()) {
+            tag.putBoolean("IsGroupLeader", true);
+        }
+
         ListTag spellsTag = new ListTag();
         for (RolledSpell rolled : knownSpells) {
             CompoundTag entry = new CompoundTag();
@@ -243,6 +311,13 @@ public abstract class AbstractCollegeWizardEntity extends NeutralWizard
     @Override
     public void readAdditionalSaveData(CompoundTag tag) {
         super.readAdditionalSaveData(tag);
+        if (tag.hasUUID("LeaderUUID")) {
+            setLeaderUuid(tag.getUUID("LeaderUUID"));
+        }
+        if (tag.getBoolean("IsGroupLeader")) {
+            setGroupLeader(true);
+        }
+
         knownSpells.clear();
         ListTag spellsTag = tag.getList("KnownSpells", Tag.TAG_COMPOUND);
         for (int i = 0; i < spellsTag.size(); i++) {

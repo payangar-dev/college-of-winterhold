@@ -6,6 +6,7 @@ import com.payangar.collegeofwinterhold.entity.ai.CollegeSpellPools;
 import com.payangar.collegeofwinterhold.entity.ai.CollegeWizardAttackGoal;
 import com.payangar.collegeofwinterhold.entity.ai.CopyLeaderTargetGoal;
 import com.payangar.collegeofwinterhold.entity.ai.FollowLeaderGoal;
+import com.payangar.collegeofwinterhold.entity.ai.GroupMember;
 import com.payangar.collegeofwinterhold.entity.ai.RolledSpell;
 import com.payangar.collegeofwinterhold.entity.ai.SchoolTendency;
 import com.payangar.collegeofwinterhold.entity.ai.WizardPreCombatBuffGoal;
@@ -91,7 +92,7 @@ import java.util.UUID;
  * </ul>
  */
 public class VampireEntity extends AbstractSpellCastingMob
-        implements Enemy, HipSpellbookHolder, BuffCooldownHolder {
+        implements Enemy, HipSpellbookHolder, BuffCooldownHolder, GroupMember {
 
     private static final EntityDataAccessor<ItemStack> HIP_SPELLBOOK =
             SynchedEntityData.defineId(VampireEntity.class, EntityDataSerializers.ITEM_STACK);
@@ -426,6 +427,20 @@ public class VampireEntity extends AbstractSpellCastingMob
 
     public void setJailer(boolean jailer) {
         this.entityData.set(IS_JAILER, jailer);
+    }
+
+    // ────────────────────────────────────────────────────────────────────────
+    // GroupMember
+
+    @Override
+    public boolean isGroupLeader() {
+        return isCovenLeader();
+    }
+
+    @Override
+    @Nullable
+    public LivingEntity getGroupLeader() {
+        return getLeader();
     }
 
     // ────────────────────────────────────────────────────────────────────────

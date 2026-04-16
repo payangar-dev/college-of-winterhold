@@ -50,8 +50,16 @@ The mod also adds **hostile blood-mage enemies**: vampires (single-type entity w
 - Coven members are exempt from MONSTER mob cap via `requiresCustomPersistence() → isCovenMember()` (Raider pattern). Custom `checkDespawn()` with `getDespawnDistance() → 500` for coven, 128 for classic (Mowzie pattern). Both overrides are decoupled: cap exemption comes from `requiresCustomPersistence`, distance check from the `checkDespawn` override that skips the `requiresCustomPersistence` early-out.
 - Leader death → frenzy on followers (Speed I + Strength I 60 s, `CRIMSON_SPORE` particles). Jailer death → captive villagers freed → `RescuedSafetyGoal` 10 s safety check → delivery (gossip `MAJOR_POSITIVE 25` + items thrown toward nearest player).
 - Captive villager state tracked via `AttachmentType<CapturedState>` on vanilla Villager (registered in `registry/ModAttachments`). Goals `CapturedPanicGoal` + `RescuedSafetyGoal` injected at capture time (AT exposes `Mob.goalSelector`). `LivingChangeTargetEvent` blocks targeting captives; `PlayerInteractEvent.EntityInteract` blocks manual unleash.
-- Debug command `/cow spawn_coven` (permission 2) spawns a full coven at caller's feet. Registered via `RegisterCommandsEvent` in `GameBusEvents`.
+- Debug commands (permission 2, registered via `RegisterCommandsEvent` in `GameBusEvents`):
+  - `/cow spawn_coven` — spawns a full vampire coven at caller's feet.
+  - `/cow spawn_exploration` — spawns a wizard exploration group at caller's feet.
 - Full design spec in auto-memory `project_coven_design.md`.
+- **Wizard exploration parties** spawn in any biome at the surface via `world/WizardExplorationSpawner.java` (same radial `LevelTickEvent.Post` pattern as covens). Config under `[wizard.exploration]` in `ModServerConfig`.
+- Exploration group: 1 Adept+ leader (random school, 70/25/5 Adept/Expert/Master) + 0–2 Novice/Apprentice followers (50/30/20 solo/+1/+2). Same school as leader. Spawn chance multiplied inside structures.
+- **`GroupMember` interface** (`entity.ai.GroupMember`): shared leader/follower contract (`isGroupLeader()`, `getGroupLeader()`) implemented by both `AbstractCollegeWizardEntity` and `VampireEntity`. `FollowLeaderGoal` and `CopyLeaderTargetGoal` are generic `<T extends Mob & GroupMember>` — work across entity families.
+- Wizard leader/follower: `LEADER_UUID` + `IS_GROUP_LEADER` synced EntityData on `AbstractCollegeWizardEntity`. Leader death → followers become independent (goals yield naturally, no special event). Exploration wizards despawn when far (`removeWhenFarAway → isExplorationGroup()`); village wizards stay persistent.
+- Full design spec in auto-memory `project_exploration_design.md`.
+- **Server config structure**: hierarchical `[vampire.coven]` / `[wizard.exploration]` categories in `ModServerConfig`.
 
 ## Git & CI
 - **One branch per MC version.** Default branch: `1.21.1`. Never mix versions in one branch.

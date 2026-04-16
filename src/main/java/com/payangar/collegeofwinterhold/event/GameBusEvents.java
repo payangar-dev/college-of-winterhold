@@ -2,6 +2,7 @@ package com.payangar.collegeofwinterhold.event;
 
 import com.payangar.collegeofwinterhold.CollegeOfWinterhold;
 import com.payangar.collegeofwinterhold.command.CovenCommand;
+import com.payangar.collegeofwinterhold.command.ExplorationCommand;
 import com.payangar.collegeofwinterhold.entity.vampire.VampireEntity;
 import com.payangar.collegeofwinterhold.entity.vampire.VampireHoundEntity;
 import com.payangar.collegeofwinterhold.entity.villager.CapturedState;
@@ -104,6 +105,7 @@ public final class GameBusEvents {
     @SubscribeEvent
     public static void onRegisterCommands(RegisterCommandsEvent event) {
         CovenCommand.register(event.getDispatcher());
+        ExplorationCommand.register(event.getDispatcher());
     }
 
     /**

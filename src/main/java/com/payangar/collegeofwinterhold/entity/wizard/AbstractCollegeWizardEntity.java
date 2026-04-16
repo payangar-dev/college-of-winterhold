@@ -11,6 +11,7 @@ import com.payangar.collegeofwinterhold.entity.ai.WizardPreCombatBuffGoal;
 import com.payangar.collegeofwinterhold.entity.wizard.core.CollegeSchool;
 import com.payangar.collegeofwinterhold.entity.wizard.core.WizardTier;
 import io.redspace.ironsspellbooks.api.registry.SpellRegistry;
+import io.redspace.ironsspellbooks.util.ModTags;
 import io.redspace.ironsspellbooks.api.spells.AbstractSpell;
 import io.redspace.ironsspellbooks.api.spells.ISpellContainer;
 import io.redspace.ironsspellbooks.entity.mobs.abstract_spell_casting_mob.AbstractSpellCastingMob;
@@ -42,8 +43,8 @@ import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.ai.goal.target.ResetUniversalAngerTargetGoal;
-import net.minecraft.world.entity.animal.IronGolem;
-import net.minecraft.world.entity.monster.Monster;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.monster.Enemy;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantment;
@@ -136,7 +137,8 @@ public abstract class AbstractCollegeWizardEntity extends NeutralWizard
         // exploration followers focus on whatever the leader is attacking.
         // Yields when no leader — the fallback chain takes over.
         this.targetSelector.addGoal(2, new CopyLeaderTargetGoal<>(this));
-        this.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(this, Monster.class, 5, true, false, null));
+        this.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(this, Mob.class, 5, true, false,
+                e -> e instanceof Enemy && !this.isAlliedTo(e)));
         this.targetSelector.addGoal(4, new NearestAttackableTargetGoal<>(this, Player.class, 10, true, false, this::isHostileTowards));
         this.targetSelector.addGoal(5, new ResetUniversalAngerTargetGoal<>(this, false));
     }
@@ -266,7 +268,7 @@ public abstract class AbstractCollegeWizardEntity extends NeutralWizard
     @Override
     public boolean isAlliedTo(Entity entity) {
         if (entity instanceof CollegeWizard) return true;
-        if (entity instanceof IronGolem) return true;
+        if (entity.getType().is(ModTags.VILLAGE_ALLIES)) return true;
         return super.isAlliedTo(entity);
     }
 

@@ -7,23 +7,16 @@ import com.payangar.collegeofwinterhold.entity.vampire.VampireEntity;
 import com.payangar.collegeofwinterhold.entity.vampire.VampireHoundEntity;
 import com.payangar.collegeofwinterhold.entity.villager.CapturedState;
 import com.payangar.collegeofwinterhold.entity.wizard.AbstractCollegeWizardEntity;
+import com.payangar.collegeofwinterhold.entity.wizard.CollegeWizard;
 import com.payangar.collegeofwinterhold.registry.ModAttachments;
-import com.payangar.collegeofwinterhold.entity.wizard.fire.FireAdeptEntity;
-import com.payangar.collegeofwinterhold.entity.wizard.fire.FireApprenticeEntity;
-import com.payangar.collegeofwinterhold.entity.wizard.fire.FireExpertEntity;
-import com.payangar.collegeofwinterhold.entity.wizard.fire.FireMasterEntity;
-import com.payangar.collegeofwinterhold.entity.wizard.fire.FireNoviceEntity;
-import com.payangar.collegeofwinterhold.entity.wizard.lightning.LightningAdeptEntity;
-import com.payangar.collegeofwinterhold.entity.wizard.lightning.LightningApprenticeEntity;
-import com.payangar.collegeofwinterhold.entity.wizard.lightning.LightningExpertEntity;
-import com.payangar.collegeofwinterhold.entity.wizard.lightning.LightningMasterEntity;
-import com.payangar.collegeofwinterhold.entity.wizard.lightning.LightningNoviceEntity;
+import io.redspace.ironsspellbooks.util.ModTags;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.tags.EntityTypeTags;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.monster.Creeper;
-import net.minecraft.world.entity.monster.Monster;
+import net.minecraft.world.entity.monster.Enemy;
 import net.minecraft.world.entity.monster.Spider;
 import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.phys.AABB;
@@ -44,61 +37,34 @@ import java.util.UUID;
 public final class GameBusEvents {
 
     /**
-     * Injects target goals on every vanilla-style hostile that spawns, telling it
-     * to attack our neutral mages on sight — same principle Minecraft hardcodes for
-     * Iron Golems. Without this, zombies and the like would ignore a College wizard
-     * entirely, breaking the "neutral but attackable by hostiles" contract.
+     * Injects target goals on every hostile mob that spawns so it attacks our
+     * neutral mages on sight — same principle Minecraft hardcodes for Iron
+     * Golems. Checks {@code Enemy} (interface) instead of {@code Monster}
+     * (class) to also catch Iron's hostile casters (Necromancer, Dead King…).
+     * <p>
+     * A single goal on the parent class {@code AbstractCollegeWizardEntity} is
+     * enough — no per-school / per-tier enumeration needed.
      */
     @SubscribeEvent
     public static void onEntityJoinLevel(EntityJoinLevelEvent event) {
         if (event.getLevel().isClientSide()) return;
-        if (event.getEntity() instanceof Monster monster) {
-            monster.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(
-                    monster, LightningNoviceEntity.class, true));
-            monster.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(
-                    monster, LightningApprenticeEntity.class, true));
-            monster.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(
-                    monster, LightningAdeptEntity.class, true));
-            monster.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(
-                    monster, LightningExpertEntity.class, true));
-            monster.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(
-                    monster, LightningMasterEntity.class, true));
-            monster.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(
-                    monster, FireNoviceEntity.class, true));
-            monster.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(
-                    monster, FireApprenticeEntity.class, true));
-            monster.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(
-                    monster, FireAdeptEntity.class, true));
-            monster.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(
-                    monster, FireExpertEntity.class, true));
-            monster.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(
-                    monster, FireMasterEntity.class, true));
-            // Vampires + hounds are Enemy-tagged but don't extend Monster, so
-            // vanilla hostiles ignore them by default — same pattern as wizards.
-            // Iron golems already target any Enemy via their stock goal, so no
-            // injection is needed on them specifically.
-            //
-            // Undead mobs treat vampires as kin (both are in the
-            // INVERTED_HEALING_AND_HARM tag), spiders are indifferent, and
-            // creepers only ever target players in vanilla.
-            boolean shouldTargetVampires = !monster.getType().is(EntityTypeTags.UNDEAD)
-                    && !(monster instanceof Spider)
-                    && !(monster instanceof Creeper);
-            if (shouldTargetVampires) {
-                monster.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(
-                        monster, VampireEntity.class, true));
-                monster.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(
-                        monster, VampireHoundEntity.class, true));
-            }
-        }
-        // College wizards target Monster.class in their own goal set, but
-        // vampires aren't Monster — inject the two dedicated target goals here
-        // so the wizard package stays free of vampire-side imports.
-        if (event.getEntity() instanceof AbstractCollegeWizardEntity wizard) {
-            wizard.targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(
-                    wizard, VampireEntity.class, true));
-            wizard.targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(
-                    wizard, VampireHoundEntity.class, true));
+        if (!(event.getEntity() instanceof Mob mob)) return;
+        if (!(mob instanceof Enemy)) return;
+
+        // Every hostile mob targets our wizards.
+        mob.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(
+                mob, AbstractCollegeWizardEntity.class, true));
+
+        // Vampires + hounds: undead treat vampires as kin, spiders are
+        // indifferent, creepers only ever target players.
+        boolean shouldTargetVampires = !mob.getType().is(EntityTypeTags.UNDEAD)
+                && !(mob instanceof Spider)
+                && !(mob instanceof Creeper);
+        if (shouldTargetVampires) {
+            mob.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(
+                    mob, VampireEntity.class, true));
+            mob.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(
+                    mob, VampireHoundEntity.class, true));
         }
     }
 
@@ -166,18 +132,48 @@ public final class GameBusEvents {
     }
 
     /**
-     * Prevents any mob from targeting a villager that is currently captured by
-     * a coven jailer. Without this, zombies and even the coven's own vampires
-     * would attack the hostages and potentially kill them before the player
-     * can rescue them.
+     * Two-part target-change handler:
+     * <ol>
+     *   <li><b>Captive protection</b> — prevents anything from targeting a
+     *       villager currently held by a coven jailer.</li>
+     *   <li><b>Reactive help</b> — when a hostile mob targets a village ally
+     *       (villager, iron golem, fellow wizard, Guard Villagers guard…),
+     *       every idle College wizard within 32 blocks aggros the attacker.
+     *       Ally membership is defined by Iron's {@code VILLAGE_ALLIES} tag
+     *       plus the {@link CollegeWizard} marker.</li>
+     * </ol>
      */
     @SubscribeEvent
     public static void onLivingChangeTarget(LivingChangeTargetEvent event) {
         LivingEntity newTarget = event.getNewAboutToBeSetTarget();
-        if (!(newTarget instanceof Villager villager)) return;
-        if (!villager.hasData(ModAttachments.CAPTURED_STATE)) return;
-        if (villager.getData(ModAttachments.CAPTURED_STATE).isCaptured()) {
+        if (newTarget == null) return;
+        if (event.getEntity().level().isClientSide()) return;
+
+        // ── Captive protection ──────────────────────────────────────────
+        if (newTarget instanceof Villager villager
+                && villager.hasData(ModAttachments.CAPTURED_STATE)
+                && villager.getData(ModAttachments.CAPTURED_STATE).isCaptured()) {
             event.setCanceled(true);
+            return;
+        }
+
+        // ── Reactive help — wizards defend village allies ───────────────
+        if (!(event.getEntity() instanceof Mob attacker)) return;
+        if (!(attacker instanceof Enemy)) return;
+
+        boolean targetIsAlly = newTarget instanceof CollegeWizard
+                || newTarget.getType().is(ModTags.VILLAGE_ALLIES);
+        if (!targetIsAlly) return;
+
+        AABB helpBox = newTarget.getBoundingBox().inflate(32.0);
+        List<AbstractCollegeWizardEntity> helpers = newTarget.level().getEntitiesOfClass(
+                AbstractCollegeWizardEntity.class, helpBox,
+                w -> w.isAlive() && w.getTarget() == null
+        );
+        for (AbstractCollegeWizardEntity wizard : helpers) {
+            if (wizard.canAttack(attacker)) {
+                wizard.setTarget(attacker);
+            }
         }
     }
 

@@ -11,10 +11,10 @@ import com.payangar.collegeofwinterhold.entity.ai.RolledSpell;
 import com.payangar.collegeofwinterhold.entity.ai.SchoolTendency;
 import com.payangar.collegeofwinterhold.entity.ai.WizardPreCombatBuffGoal;
 import com.payangar.collegeofwinterhold.entity.vampire.core.VampireVariant;
-import com.payangar.collegeofwinterhold.entity.wizard.CollegeWizard;
 import com.payangar.collegeofwinterhold.entity.wizard.HipSpellbookHolder;
 import com.payangar.collegeofwinterhold.registry.ModEntityTypes;
 import io.redspace.ironsspellbooks.api.registry.SpellRegistry;
+import io.redspace.ironsspellbooks.util.ModTags;
 import io.redspace.ironsspellbooks.api.spells.AbstractSpell;
 import io.redspace.ironsspellbooks.api.spells.ISpellContainer;
 import io.redspace.ironsspellbooks.entity.mobs.abstract_spell_casting_mob.AbstractSpellCastingMob;
@@ -51,7 +51,6 @@ import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
-import net.minecraft.world.entity.animal.IronGolem;
 import net.minecraft.world.entity.monster.AbstractIllager;
 import net.minecraft.world.entity.monster.Enemy;
 import net.minecraft.world.entity.npc.Villager;
@@ -179,12 +178,16 @@ public class VampireEntity extends AbstractSpellCastingMob
         // when the leader is dead/missing — the fallback chain takes over.
         this.targetSelector.addGoal(2, new CopyLeaderTargetGoal(this));
         this.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(this, Player.class, true));
+        // Villagers keep their own goal with mustSee=false so vampires chase
+        // them through walls, mirroring vanilla Zombie behaviour.
         this.targetSelector.addGoal(4, new NearestAttackableTargetGoal<>(this, Villager.class, false));
-        this.targetSelector.addGoal(4, new NearestAttackableTargetGoal<>(this, IronGolem.class, true));
         this.targetSelector.addGoal(4, new NearestAttackableTargetGoal<>(this, AbstractIllager.class, true));
-        // CollegeWizard is an interface — targeted via a Mob-class goal + predicate.
+        // Catch-all for every village ally: iron golems, Iron's priests, Guard
+        // Villagers guards, every College wizard — all live in the VILLAGE_ALLIES
+        // tag so a single predicate covers them without enumerating classes.
         this.targetSelector.addGoal(5, new NearestAttackableTargetGoal<>(
-                this, Mob.class, 10, true, false, e -> e instanceof CollegeWizard));
+                this, Mob.class, 10, true, false,
+                e -> e.getType().is(ModTags.VILLAGE_ALLIES)));
     }
 
     @Override
@@ -709,7 +712,7 @@ public class VampireEntity extends AbstractSpellCastingMob
     @Override
     public boolean isAlliedTo(Entity entity) {
         // Vampires are allied with other vampires and with their hounds. They
-        // are never allied with CollegeWizard, villagers or illagers.
+        // are never allied with wizards, villagers or illagers.
         if (entity instanceof VampireEntity) return true;
         if (entity instanceof VampireHoundEntity) return true;
         return super.isAlliedTo(entity);

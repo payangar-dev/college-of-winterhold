@@ -21,6 +21,7 @@ public final class ModServerConfig {
     public static final ModConfigSpec.IntValue COVEN_MIN_SPACING_BLOCKS;
     public static final ModConfigSpec.IntValue COVEN_MIN_SPAWN_DISTANCE;
     public static final ModConfigSpec.IntValue COVEN_MAX_SPAWN_DISTANCE;
+    public static final ModConfigSpec.DoubleValue COVEN_FORWARD_BIAS;
 
     // ────────────────────────────────────────────────────────────────────────
     // [wizard.exploration]
@@ -32,6 +33,12 @@ public final class ModServerConfig {
     public static final ModConfigSpec.IntValue EXPLORATION_MIN_SPACING_BLOCKS;
     public static final ModConfigSpec.IntValue EXPLORATION_MIN_SPAWN_DISTANCE;
     public static final ModConfigSpec.IntValue EXPLORATION_MAX_SPAWN_DISTANCE;
+    public static final ModConfigSpec.DoubleValue EXPLORATION_FORWARD_BIAS;
+
+    // ────────────────────────────────────────────────────────────────────────
+    // [debug]
+
+    public static final ModConfigSpec.BooleanValue DEBUG_SPAWN_ANNOUNCEMENTS;
 
     public static final ModConfigSpec SPEC;
 
@@ -50,10 +57,12 @@ public final class ModServerConfig {
 
         COVEN_ATTEMPTS_PER_SCAN = BUILDER
                 .comment(
-                        "Number of independent spawn attempts per scan tick per player.",
-                        "Each attempt picks a random point in a ring around the player, then runs",
-                        "the biome / ground / spacing checks. More attempts = higher odds any single scan",
-                        "succeeds in spawning a coven.",
+                        "Fallback attempts per scan per player. Each attempt picks a random point",
+                        "in a directional cone around the player and runs biome / ground / chance /",
+                        "spacing checks. The FIRST attempt that passes every check spawns the coven",
+                        "and the remaining attempts are skipped — attempts are fallbacks for",
+                        "rejected positions, not multipliers. More attempts = higher odds any single",
+                        "scan produces at least one spawn.",
                         "Default: 5."
                 )
                 .defineInRange("attemptsPerScan", 5, 1, 50);
@@ -93,6 +102,15 @@ public final class ModServerConfig {
                 )
                 .defineInRange("maxSpawnDistance", 128, 16, 512);
 
+        COVEN_FORWARD_BIAS = BUILDER
+                .comment(
+                        "Bias spawn positions toward the player's movement/look direction.",
+                        "0.0 = uniform random angle (full ring, legacy behavior).",
+                        "1.0 = tight cone in front of the player.",
+                        "Default: 0.6."
+                )
+                .defineInRange("forwardBias", 0.6, 0.0, 1.0);
+
         BUILDER.pop(); // coven
         BUILDER.pop(); // vampire
 
@@ -110,7 +128,10 @@ public final class ModServerConfig {
 
         EXPLORATION_ATTEMPTS_PER_SCAN = BUILDER
                 .comment(
-                        "Number of independent spawn attempts per scan tick per player.",
+                        "Fallback attempts per scan per player. The first attempt that passes every",
+                        "check spawns the group and the rest are skipped — attempts are fallbacks",
+                        "for rejected positions (wrong biome, bad ground, spacing conflict), not",
+                        "multipliers.",
                         "Default: 3."
                 )
                 .defineInRange("attemptsPerScan", 3, 1, 50);
@@ -154,8 +175,32 @@ public final class ModServerConfig {
                 )
                 .defineInRange("maxSpawnDistance", 128, 16, 512);
 
+        EXPLORATION_FORWARD_BIAS = BUILDER
+                .comment(
+                        "Bias spawn positions toward the player's movement/look direction.",
+                        "0.0 = uniform random angle (full ring, legacy behavior).",
+                        "1.0 = tight cone in front of the player.",
+                        "Default: 0.6."
+                )
+                .defineInRange("forwardBias", 0.6, 0.0, 1.0);
+
         BUILDER.pop(); // exploration
         BUILDER.pop(); // wizard
+
+        // ── Debug ───────────────────────────────────────────────────────────
+        BUILDER.push("debug");
+
+        DEBUG_SPAWN_ANNOUNCEMENTS = BUILDER
+                .comment(
+                        "When true, every coven / exploration group spawn broadcasts a",
+                        "clickable chat message (same pattern as vanilla /locate) to all",
+                        "players and gives each spawned member a 30 s Glowing effect.",
+                        "Test aid — leave false in normal play.",
+                        "Default: false."
+                )
+                .define("spawnAnnouncements", false);
+
+        BUILDER.pop(); // debug
 
         SPEC = BUILDER.build();
     }

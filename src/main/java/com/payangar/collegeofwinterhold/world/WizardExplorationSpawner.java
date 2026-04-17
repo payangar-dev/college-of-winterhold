@@ -11,13 +11,8 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobSpawnType;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.structure.Structure;
 import net.minecraft.world.phys.AABB;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.event.tick.LevelTickEvent;
 
 import java.util.Map;
 
@@ -30,84 +25,54 @@ import java.util.Map;
  * (villages, temples, strongholds, etc.) where a travelling mage would
  * logically stop to study.
  *
- * <p>Groups are composed of a single Adept+ leader optionally accompanied
- * by 1–2 Novice/Apprentice followers of the same school. If the leader
- * dies, followers become independent (their {@link com.payangar.collegeofwinterhold.entity.ai.FollowLeaderGoal}
- * yields when the leader UUID resolves to null).
- *
- * <p>Exploration wizards despawn when far from players, unlike village
- * wizards which are persistent.
- *
- * <p>Pattern mirrors {@link VampireCovenSpawner}: {@code LevelTickEvent.Post}
- * radial scan around each player, spacing-gated, configurable via
- * {@link ModServerConfig}.
+ * <p>See {@link AbstractGroupSpawner} for the shared spawning algorithm
+ * (directional cone, adaptive attempts, chunk safety, spacing gate).
  */
-@EventBusSubscriber(modid = CollegeOfWinterhold.MODID, bus = EventBusSubscriber.Bus.GAME)
-public final class WizardExplorationSpawner {
+public class WizardExplorationSpawner extends AbstractGroupSpawner {
 
-    private WizardExplorationSpawner() {}
+    public static final WizardExplorationSpawner INSTANCE = new WizardExplorationSpawner();
 
-    @SubscribeEvent
-    public static void onLevelTick(LevelTickEvent.Post event) {
-        if (!(event.getLevel() instanceof ServerLevel server)) return;
-        int interval = ModServerConfig.EXPLORATION_SCAN_INTERVAL_TICKS.get();
-        if (server.getServer().getTickCount() % interval != 0) return;
+    WizardExplorationSpawner() {}
 
-        for (Player player : server.players()) {
-            tryNearPlayer(server, player);
+    // ── Config hooks ────────────────────────────────────────────────────────
+
+    @Override protected int scanIntervalTicks() { return ModServerConfig.EXPLORATION_SCAN_INTERVAL_TICKS.get(); }
+    @Override protected int attemptsPerScan()    { return ModServerConfig.EXPLORATION_ATTEMPTS_PER_SCAN.get(); }
+    @Override protected int minSpawnDistance()    { return ModServerConfig.EXPLORATION_MIN_SPAWN_DISTANCE.get(); }
+    @Override protected int maxSpawnDistance()    { return ModServerConfig.EXPLORATION_MAX_SPAWN_DISTANCE.get(); }
+    @Override protected int minSpacingBlocks()    { return ModServerConfig.EXPLORATION_MIN_SPACING_BLOCKS.get(); }
+    @Override protected double forwardBias()      { return ModServerConfig.EXPLORATION_FORWARD_BIAS.get(); }
+
+    // ── Behavioral hooks ────────────────────────────────────────────────────
+
+    @Override
+    protected double spawnChance(ServerLevel server, BlockPos ground) {
+        double base = ModServerConfig.EXPLORATION_BASE_SPAWN_CHANCE.get();
+        double mult = ModServerConfig.EXPLORATION_STRUCTURE_MULTIPLIER.get();
+        Map<Structure, ?> structures = server.structureManager().getAllStructuresAt(ground);
+        if (!structures.isEmpty()) {
+            return Math.min(base * mult, 1.0);
         }
+        return base;
     }
 
-    private static void tryNearPlayer(ServerLevel server, Player player) {
-        RandomSource rng = server.getRandom();
-
-        int attempts = ModServerConfig.EXPLORATION_ATTEMPTS_PER_SCAN.get();
-        double baseChance = ModServerConfig.EXPLORATION_BASE_SPAWN_CHANCE.get();
-        double structureMult = ModServerConfig.EXPLORATION_STRUCTURE_MULTIPLIER.get();
-        int minDist = ModServerConfig.EXPLORATION_MIN_SPAWN_DISTANCE.get();
-        int maxDist = ModServerConfig.EXPLORATION_MAX_SPAWN_DISTANCE.get();
-        int spacing = ModServerConfig.EXPLORATION_MIN_SPACING_BLOCKS.get();
-
-        for (int i = 0; i < attempts; i++) {
-            double angle = rng.nextDouble() * Math.PI * 2.0;
-            double distance = minDist + rng.nextDouble() * Math.max(0, maxDist - minDist);
-            int x = (int) (player.getX() + Math.cos(angle) * distance);
-            int z = (int) (player.getZ() + Math.sin(angle) * distance);
-
-            int chunkX = x >> 4;
-            int chunkZ = z >> 4;
-
-            if (!server.hasChunk(chunkX, chunkZ)) continue;
-            if (server.getChunkSource().getChunkNow(chunkX, chunkZ) == null) continue;
-
-            // Surface position — wizards are explorers travelling overworld
-            int y = server.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
-            BlockPos ground = new BlockPos(x, y, z);
-
-            // Structure boost: multiply base chance if inside any structure
-            double effectiveChance = baseChance;
-            Map<Structure, ?> structures = server.structureManager()
-                    .getAllStructuresAt(ground);
-            if (!structures.isEmpty()) {
-                effectiveChance = Math.min(baseChance * structureMult, 1.0);
-            }
-
-            if (rng.nextDouble() > effectiveChance) continue;
-
-            // Spacing gate: reject if any college wizard already exists nearby
-            AABB spacingBox = new AABB(ground).inflate(spacing);
-            if (!server.getEntitiesOfClass(AbstractCollegeWizardEntity.class, spacingBox,
-                    AbstractCollegeWizardEntity::isExplorationGroup).isEmpty()) {
-                continue;
-            }
-
-            spawnExplorationGroup(server, ground, rng);
-        }
+    @Override
+    protected boolean isSpacingClear(ServerLevel server, BlockPos ground) {
+        AABB box = new AABB(ground).inflate(minSpacingBlocks());
+        return server.getEntitiesOfClass(AbstractCollegeWizardEntity.class, box,
+                AbstractCollegeWizardEntity::isExplorationGroup).isEmpty();
     }
+
+    @Override
+    protected void spawnGroup(ServerLevel server, BlockPos pos, RandomSource rng) {
+        spawnExplorationGroup(server, pos, rng);
+    }
+
+    // ── Group composition (public static for debug command) ─────────────────
 
     /**
      * Spawns an exploration group at the given position. Exposed for the debug
-     * command ({@code /cow spawn_exploration}) and for the radial scan above.
+     * command ({@code /cow spawn_exploration}) and for the spawner above.
      */
     public static void spawnExplorationGroup(ServerLevel server, BlockPos center, RandomSource rng) {
         // Random school — exploration is not biome-bound
@@ -138,13 +103,16 @@ public final class WizardExplorationSpawner {
         leader.moveTo(center.getX() + 0.5, center.getY(), center.getZ() + 0.5,
                 rng.nextFloat() * 360f - 180f, 0f);
 
-        if (followerCount > 0) {
-            leader.setGroupLeader(true);
-        }
+        // Always flag the leader, even when solo — a solo wizard is still the
+        // (trivial) leader of its own exploration party. This is what makes
+        // isExplorationGroup() → true, so the spacing gate sees solo wizards
+        // and removeWhenFarAway() despawns them like grouped ones.
+        leader.setGroupLeader(true);
 
         leader.finalizeSpawn(server, server.getCurrentDifficultyAt(center),
                 MobSpawnType.EVENT, null);
         server.addFreshEntityWithPassengers(leader);
+        SpawnDebugBroadcaster.glow(leader);
 
         // Spawn followers — same school as leader
         for (int i = 0; i < followerCount; i++) {
@@ -161,16 +129,19 @@ public final class WizardExplorationSpawner {
 
             double ox = (rng.nextDouble() - 0.5) * 5.0;
             double oz = (rng.nextDouble() - 0.5) * 5.0;
-            int fy = server.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
-                    center.getX() + (int) ox, center.getZ() + (int) oz);
-            follower.moveTo(center.getX() + 0.5 + ox, fy,
-                    center.getZ() + 0.5 + oz, rng.nextFloat() * 360f - 180f, 0f);
+            int fx = center.getX() + (int) ox;
+            int fz = center.getZ() + (int) oz;
+            BlockPos fFoot = AbstractGroupSpawner.walkDownToSurface(server, fx, fz);
+            if (fFoot == null) fFoot = center;
+            follower.moveTo(fFoot.getX() + 0.5, fFoot.getY(),
+                    fFoot.getZ() + 0.5, rng.nextFloat() * 360f - 180f, 0f);
 
             follower.setLeaderUuid(leader.getUUID());
 
             follower.finalizeSpawn(server, server.getCurrentDifficultyAt(center),
                     MobSpawnType.EVENT, null);
             server.addFreshEntityWithPassengers(follower);
+            SpawnDebugBroadcaster.glow(follower);
         }
 
         CollegeOfWinterhold.LOGGER.info(
@@ -178,5 +149,13 @@ public final class WizardExplorationSpawner {
                 1 + followerCount, school.name().toLowerCase(), leaderTier.name().toLowerCase(),
                 followerCount, center.getX(), center.getY(), center.getZ(),
                 server.dimension().location());
+
+        SpawnDebugBroadcaster.announce(server,
+                String.format("Exploration party — %s %s (%d follower%s)",
+                        school.name().toLowerCase(),
+                        leaderTier.name().toLowerCase(),
+                        followerCount,
+                        followerCount == 1 ? "" : "s"),
+                center);
     }
 }
